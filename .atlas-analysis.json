@@ -1,0 +1,87 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "List (sls)",
+  "projectDescription": "Modern & efficient rebuild of the UNIX ls command with color output, icons, and flexible sorting",
+  "theme": "aspen",
+  "primaryColor": "#0EA5E9",
+  "lightColor": "#38BDF8",
+  "darkColor": "#0284C7",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Command Reference",
+        "pages": [
+          "commands/overview",
+          "commands/basic-usage",
+          "commands/options",
+          "commands/examples"
+        ]
+      },
+      {
+        "group": "Configuration",
+        "pages": [
+          "configuration/display-options",
+          "configuration/sorting",
+          "configuration/color-and-icons"
+        ]
+      },
+      {
+        "group": "Library API",
+        "pages": [
+          "api/overview",
+          "api/display-options",
+          "api/file-representation",
+          "api/file-manager-helper",
+          "api/sort-option",
+          "api/terminal-colors"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "development/building-from-source",
+          "development/architecture",
+          "development/contributing"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Color-coded output for different file types",
+    "File type icons (directories, executables, symlinks)",
+    "Human-readable file sizes",
+    "Flexible sorting (name, size, modification time)",
+    "Recursive directory listing with depth control",
+    "Long format display with detailed attributes",
+    "Cross-platform support (macOS and Linux)",
+    "Swift-based for performance and safety"
+  ],
+  "publicApiSurface": [
+    "sls (CLI command)",
+    "--all / -a (show hidden files)",
+    "--long / -l (long format)",
+    "--recurse / -r (recursive listing)",
+    "--color / -c (colorize output)",
+    "--icons / -i (show file icons)",
+    "--one-line / -1 (one file per line)",
+    "--human-readable / -h (human-readable sizes)",
+    "--sort-time / -t (sort by time)",
+    "--sort-size / -S (sort by size)",
+    "--directory / -d (list directories themselves)",
+    "--classify / -F (append indicators)",
+    "--depth-limit / -L (limit recursion depth)",
+    "DisplayOptions (configuration struct)",
+    "SortOption (enum: name, time, size)",
+    "FileRepresentation (file type representation)",
+    "FileManagerHelper (core listing utilities)",
+    "TerminalColors (ANSI color codes)"
+  ]
+}
