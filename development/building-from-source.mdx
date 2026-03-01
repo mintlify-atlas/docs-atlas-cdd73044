@@ -1,0 +1,296 @@
+---
+title: Building from Source
+description: Complete guide to building List (sls) from source code
+---
+
+## Prerequisites
+
+Before building List from source, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Swift 6.2+" icon="code">
+    Required Swift version for building the project
+  </Card>
+  <Card title="macOS 13+" icon="apple">
+    Minimum platform version for macOS builds
+  </Card>
+  <Card title="Git" icon="git">
+    For cloning the repository
+  </Card>
+  <Card title="Xcode (macOS)" icon="hammer">
+    Recommended for macOS development
+  </Card>
+</CardGroup>
+
+<Note>
+  List supports both macOS and Linux platforms. On Linux, you'll need to install Swift 6.2+ using [Swiftly](https://swift.org/install/linux/) or your distribution's package manager.
+</Note>
+
+## Quick Start
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the List repository from GitHub:
+    
+    ```bash
+    git clone https://github.com/mac9sb/list.git
+    cd list
+    ```
+  </Step>
+
+  <Step title="Build the Project">
+    Build List using Swift Package Manager:
+    
+    ```bash
+    swift build
+    ```
+    
+    This creates a debug build in `.build/debug/sls`.
+  </Step>
+
+  <Step title="Run Tests">
+    Verify your build by running the test suite:
+    
+    ```bash
+    swift test
+    ```
+  </Step>
+
+  <Step title="Install (Optional)">
+    Install the built binary to your system:
+    
+    ```bash
+    cp .build/debug/sls /usr/local/bin/
+    ```
+    
+    Or for a release build:
+    
+    ```bash
+    swift build -c release
+    cp .build/release/sls /usr/local/bin/
+    ```
+  </Step>
+</Steps>
+
+## Build Configurations
+
+### Debug Build
+
+The debug build includes debugging symbols and is not optimized:
+
+```bash
+swift build
+```
+
+The executable is located at `.build/debug/sls`.
+
+### Release Build
+
+The release build is optimized for production use:
+
+```bash
+swift build -c release
+```
+
+The executable is located at `.build/release/sls`.
+
+<Tip>
+  Release builds are significantly faster and have a smaller binary size. Use release builds for production deployments.
+</Tip>
+
+### Architecture-Specific Builds
+
+On macOS, you can build for specific architectures:
+
+```bash
+# Build for x86_64 (Intel)
+swift build -c release --arch x86_64
+
+# Build for arm64 (Apple Silicon)
+swift build -c release --arch arm64
+```
+
+## Platform-Specific Instructions
+
+<Tabs>
+  <Tab title="macOS">
+    ### macOS Build
+    
+    1. Ensure you have Xcode Command Line Tools installed:
+       ```bash
+       xcode-select --install
+       ```
+    
+    2. Verify Swift version:
+       ```bash
+       swift --version
+       # Should be 6.2 or later
+       ```
+    
+    3. Build the project:
+       ```bash
+       swift build -c release
+       ```
+    
+    4. The binary will be at `.build/release/sls`
+  </Tab>
+  
+  <Tab title="Linux">
+    ### Linux Build
+    
+    1. Install Swift 6.2 using Swiftly:
+       ```bash
+       curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
+       tar zxf swiftly-$(uname -m).tar.gz
+       ./swiftly init --quiet-shell-followup
+       source "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+       swiftly install 6.2
+       ```
+    
+    2. Verify installation:
+       ```bash
+       swift --version
+       ```
+    
+    3. Build the project:
+       ```bash
+       swift build -c release
+       ```
+    
+    4. The binary will be at `.build/release/sls`
+  </Tab>
+</Tabs>
+
+## Advanced Build Tasks
+
+### Generating Documentation
+
+List uses Swift-DocC for documentation generation:
+
+```bash
+swift package generate-documentation
+```
+
+This generates DocC documentation for the project's API.
+
+<Info>
+  The project uses the `swift-docc-plugin` (version 1.4.3+) for documentation generation.
+</Info>
+
+### Running Specific Tests
+
+Run the entire test suite:
+
+```bash
+swift test
+```
+
+Run tests with verbose output:
+
+```bash
+swift test --verbose
+```
+
+### Clean Build Artifacts
+
+Remove build artifacts to start fresh:
+
+```bash
+swift package clean
+```
+
+Or manually remove the build directory:
+
+```bash
+rm -rf .build
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Swift version mismatch">
+    **Problem:** Error about Swift version compatibility.
+    
+    **Solution:** Ensure you're using Swift 6.2 or later:
+    ```bash
+    swift --version
+    ```
+    
+    Update Swift using Xcode (macOS) or Swiftly (Linux).
+  </Accordion>
+  
+  <Accordion title="Missing dependencies">
+    **Problem:** Build fails with missing package dependencies.
+    
+    **Solution:** Resolve and update dependencies:
+    ```bash
+    swift package resolve
+    swift package update
+    ```
+  </Accordion>
+  
+  <Accordion title="Build fails on Linux">
+    **Problem:** Build errors on Linux systems.
+    
+    **Solution:** Ensure you have the required system libraries:
+    ```bash
+    # Ubuntu/Debian
+    sudo apt-get update
+    sudo apt-get install libsqlite3-dev libncurses5-dev
+    
+    # Fedora/RHEL
+    sudo dnf install sqlite-devel ncurses-devel
+    ```
+  </Accordion>
+  
+  <Accordion title="Permission denied when installing">
+    **Problem:** Cannot copy binary to `/usr/local/bin/`.
+    
+    **Solution:** Use sudo or choose a user-writable location:
+    ```bash
+    # With sudo
+    sudo cp .build/release/sls /usr/local/bin/
+    
+    # Or install to user directory
+    mkdir -p ~/.local/bin
+    cp .build/release/sls ~/.local/bin/
+    # Add ~/.local/bin to your PATH
+    ```
+  </Accordion>
+  
+  <Accordion title="Tests fail unexpectedly">
+    **Problem:** Test suite fails during build verification.
+    
+    **Solution:** Ensure you're in the project root and have a clean build:
+    ```bash
+    swift package clean
+    swift build
+    swift test
+    ```
+    
+    Check that file permissions are correct in the Tests directory.
+  </Accordion>
+</AccordionGroup>
+
+## Dependencies
+
+List relies on the following Swift packages:
+
+| Package | Version | Purpose |
+|---------|---------|--------|
+| [swift-argument-parser](https://github.com/apple/swift-argument-parser) | 1.0.0+ | Command-line argument parsing |
+| [swift-docc-plugin](https://github.com/swiftlang/swift-docc-plugin) | 1.4.3+ | Documentation generation |
+| [swift-testing](https://github.com/swiftlang/swift-testing) | 0.11.0+ | Modern Swift testing framework |
+
+These dependencies are automatically fetched during the build process.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Learn about the project structure and design
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Start contributing to the project
+  </Card>
+</CardGroup>

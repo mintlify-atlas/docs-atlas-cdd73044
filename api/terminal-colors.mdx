@@ -1,0 +1,360 @@
+---
+title: TerminalColors
+description: ANSI terminal color codes for file type colorization
+---
+
+The `TerminalColors` enum provides ANSI color codes for displaying different file types in terminal output.
+
+## Type Definition
+
+```swift
+public enum TerminalColors: String
+```
+
+Defined in: `SwiftListCore/Utilities/TerminalColors.swift`
+
+This enum conforms to `String`, allowing direct access to ANSI escape codes via the `rawValue` property.
+
+## Cases
+
+<ParamField path="white" type="TerminalColors">
+  White color for regular files.
+  
+  ANSI code: `\u{001B}[0;37m`
+</ParamField>
+
+<ParamField path="yellow" type="TerminalColors">
+  Yellow color for symbolic links.
+  
+  ANSI code: `\u{001B}[0;33m`
+</ParamField>
+
+<ParamField path="red" type="TerminalColors">
+  Red color for executable files.
+  
+  ANSI code: `\u{001B}[0;31m`
+</ParamField>
+
+<ParamField path="blue" type="TerminalColors">
+  Blue color for directories.
+  
+  ANSI code: `\u{001B}[0;34m`
+</ParamField>
+
+<ParamField path="reset" type="TerminalColors">
+  Reset code to restore default terminal colors.
+  
+  ANSI code: `\u{001B}[0;0m`
+  
+  Always use this after applying a color to prevent color bleeding into subsequent output.
+</ParamField>
+
+## Color Assignments
+
+| File Type | Color | Use Case |
+|-----------|-------|----------|
+| Regular files | White | Default files, documents, text files |
+| Directories | Blue | Folders and directory entries |
+| Symbolic links | Yellow | Symlinks and aliases |
+| Executables | Red | Binary executables and executable scripts |
+| Reset | None | Restore default terminal color |
+
+## Usage Examples
+
+### Basic Colorized Output
+
+```swift
+import SwiftListCore
+
+print("\(TerminalColors.blue.rawValue)directory\(TerminalColors.reset.rawValue)")
+print("\(TerminalColors.white.rawValue)file.txt\(TerminalColors.reset.rawValue)")
+print("\(TerminalColors.red.rawValue)script.sh\(TerminalColors.reset.rawValue)")
+print("\(TerminalColors.yellow.rawValue)symlink\(TerminalColors.reset.rawValue)")
+```
+
+### Colorize File Names Based on Type
+
+```swift
+import Foundation
+import SwiftListCore
+
+func colorizeFileName(_ url: URL) throws -> String {
+    let attributes = try FileManager.default.attributesOfItem(
+        atPath: url.path
+    )
+    
+    let representation = FileManagerHelper.determineType(
+        of: url,
+        attributes: attributes
+    )
+    
+    return "\(representation.color)\(url.lastPathComponent)\(TerminalColors.reset.rawValue)"
+}
+
+// Usage
+let fileURL = URL(fileURLWithPath: "/usr/bin/swift")
+let colorized = try colorizeFileName(fileURL)
+print(colorized)  // Displays "swift" in red (executable)
+```
+
+### Custom File Listing with Colors
+
+```swift
+import Foundation
+import SwiftListCore
+
+func listColorized(_ path: String) throws {
+    let url = URL(fileURLWithPath: path)
+    let contents = try FileManager.default.contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: nil,
+        options: [.skipsHiddenFiles]
+    )
+    
+    for fileURL in contents.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+        let attributes = try FileManager.default.attributesOfItem(
+            atPath: fileURL.path
+        )
+        let representation = FileManagerHelper.determineType(
+            of: fileURL,
+            attributes: attributes
+        )
+        
+        print("\(representation.color)\(fileURL.lastPathComponent)\(TerminalColors.reset.rawValue)")
+    }
+}
+
+try listColorized("/usr/local/bin")
+// Outputs files in appropriate colors
+```
+
+### Accessing Raw ANSI Codes
+
+```swift
+import SwiftListCore
+
+print("White: \(TerminalColors.white.rawValue)")
+// Output: White: \u{001B}[0;37m
+
+print("Blue: \(TerminalColors.blue.rawValue)")
+// Output: Blue: \u{001B}[0;34m
+
+print("Reset: \(TerminalColors.reset.rawValue)")
+// Output: Reset: \u{001B}[0;0m
+```
+
+### Building Colored Strings
+
+```swift
+import SwiftListCore
+
+func formatDirectory(_ name: String) -> String {
+    return "\(TerminalColors.blue.rawValue)📁 \(name)/\(TerminalColors.reset.rawValue)"
+}
+
+func formatFile(_ name: String) -> String {
+    return "\(TerminalColors.white.rawValue)📄 \(name)\(TerminalColors.reset.rawValue)"
+}
+
+func formatExecutable(_ name: String) -> String {
+    return "\(TerminalColors.red.rawValue)⚙️ \(name)*\(TerminalColors.reset.rawValue)"
+}
+
+func formatSymlink(_ name: String, target: String) -> String {
+    return "\(TerminalColors.yellow.rawValue)🔗 \(name) -> \(target)\(TerminalColors.reset.rawValue)"
+}
+
+print(formatDirectory("Documents"))
+print(formatFile("readme.txt"))
+print(formatExecutable("build.sh"))
+print(formatSymlink("link", target: "/usr/bin/actual"))
+```
+
+### Conditional Colorization
+
+```swift
+import SwiftListCore
+
+func formatWithColor(_ text: String, color: TerminalColors, useColor: Bool) -> String {
+    if useColor {
+        return "\(color.rawValue)\(text)\(TerminalColors.reset.rawValue)"
+    } else {
+        return text
+    }
+}
+
+// With color
+let colored = formatWithColor("directory", color: .blue, useColor: true)
+print(colored)  // Blue "directory"
+
+// Without color
+let plain = formatWithColor("directory", color: .blue, useColor: false)
+print(plain)  // Plain "directory"
+```
+
+### Using with DisplayOptions
+
+```swift
+import SwiftListCore
+
+// Colors are automatically applied when color option is enabled
+let options = DisplayOptions(
+    color: true,  // Enable colorization
+    icons: true
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+// Output will have colors applied automatically
+```
+
+### Strip Colors from Output
+
+```swift
+import Foundation
+
+func stripANSIColors(_ text: String) -> String {
+    return text.replacingOccurrences(
+        of: "\\u{001B}\\[[0-9;]*m",
+        with: "",
+        options: .regularExpression
+    )
+}
+
+let coloredText = "\(TerminalColors.blue.rawValue)directory\(TerminalColors.reset.rawValue)"
+let plainText = stripANSIColors(coloredText)
+print(plainText)  // "directory" without color codes
+```
+
+### Custom Color Scheme
+
+```swift
+import Foundation
+import SwiftListCore
+
+struct CustomFormatter {
+    let useColors: Bool
+    
+    func formatPath(_ path: String, isDirectory: Bool, isExecutable: Bool, isSymlink: Bool) -> String {
+        guard useColors else { return path }
+        
+        let color: TerminalColors
+        if isSymlink {
+            color = .yellow
+        } else if isDirectory {
+            color = .blue
+        } else if isExecutable {
+            color = .red
+        } else {
+            color = .white
+        }
+        
+        return "\(color.rawValue)\(path)\(TerminalColors.reset.rawValue)"
+    }
+}
+
+let formatter = CustomFormatter(useColors: true)
+
+print(formatter.formatPath("docs", isDirectory: true, isExecutable: false, isSymlink: false))
+print(formatter.formatPath("script.sh", isDirectory: false, isExecutable: true, isSymlink: false))
+print(formatter.formatPath("link", isDirectory: false, isExecutable: false, isSymlink: true))
+```
+
+### Pretty Print File Tree
+
+```swift
+import Foundation
+import SwiftListCore
+
+func prettyPrintTree(_ path: String, prefix: String = "", useColors: Bool = true) throws {
+    let url = URL(fileURLWithPath: path)
+    let contents = try FileManager.default.contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: [.isDirectoryKey],
+        options: [.skipsHiddenFiles]
+    )
+    
+    for (index, fileURL) in contents.enumerated() {
+        let isLast = index == contents.count - 1
+        let connector = isLast ? "└── " : "├── "
+        let newPrefix = prefix + (isLast ? "    " : "│   ")
+        
+        let attributes = try FileManager.default.attributesOfItem(
+            atPath: fileURL.path
+        )
+        let representation = FileManagerHelper.determineType(
+            of: fileURL,
+            attributes: attributes
+        )
+        
+        let color = useColors ? representation.color : ""
+        let reset = useColors ? TerminalColors.reset.rawValue : ""
+        let name = fileURL.lastPathComponent
+        
+        print("\(prefix)\(connector)\(color)\(name)\(reset)")
+        
+        if fileURL.hasDirectoryPath {
+            try prettyPrintTree(fileURL.path, prefix: newPrefix, useColors: useColors)
+        }
+    }
+}
+
+try prettyPrintTree("/usr/local", useColors: true)
+// Output:
+// ├── bin (in blue)
+// │   ├── script1 (in red if executable)
+// │   └── script2 (in red if executable)
+// └── lib (in blue)
+//     └── library.so (in white)
+```
+
+## ANSI Color Code Reference
+
+| Color | ANSI Escape Code | Decimal | Description |
+|-------|-----------------|---------|-------------|
+| White | `\u{001B}[0;37m` | ESC[0;37m | Normal white text |
+| Yellow | `\u{001B}[0;33m` | ESC[0;33m | Normal yellow text |
+| Red | `\u{001B}[0;31m` | ESC[0;31m | Normal red text |
+| Blue | `\u{001B}[0;34m` | ESC[0;34m | Normal blue text |
+| Reset | `\u{001B}[0;0m` | ESC[0;0m | Reset to default |
+
+## Terminal Compatibility
+
+ANSI color codes are widely supported:
+
+- ✅ macOS Terminal.app
+- ✅ iTerm2
+- ✅ Linux terminal emulators (xterm, GNOME Terminal, etc.)
+- ✅ VS Code integrated terminal
+- ✅ Xcode console (limited)
+- ⚠️ Windows Command Prompt (Windows 10+ with ANSI support enabled)
+
+For maximum compatibility, always provide an option to disable colors.
+
+## Best Practices
+
+1. **Always Reset Colors**: Use `TerminalColors.reset` after applying colors to prevent color bleeding
+   ```swift
+   print("\(TerminalColors.blue.rawValue)text\(TerminalColors.reset.rawValue)")
+   ```
+
+2. **Provide Color Disable Option**: Allow users to turn off colors for non-interactive use
+   ```swift
+   let options = DisplayOptions(color: false)
+   ```
+
+3. **Test Without Colors**: Ensure your output is readable even without colorization
+
+4. **Respect Terminal Capabilities**: Check if the terminal supports colors before using them
+
+5. **Use with Icons**: Colors work well when combined with icons for better visual distinction
+   ```swift
+   let options = DisplayOptions(color: true, icons: true)
+   ```
+
+## Related
+
+- [FileRepresentation](/api/file-representation) - Uses TerminalColors in the color property
+- [FileManagerHelper](/api/file-manager-helper) - Applies colors based on file types
+- [DisplayOptions](/api/display-options) - Enable colors with the color property
+- [Library API Overview](/api/overview) - Getting started with the library

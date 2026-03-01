@@ -1,0 +1,223 @@
+---
+title: FileRepresentation
+description: Visual representation of files with icons and colors
+---
+
+The `FileRepresentation` struct represents a file with visual formatting information, including emoji icons, ANSI color codes, and symbolic link destinations.
+
+## Type Definition
+
+```swift
+public struct FileRepresentation
+```
+
+Defined in: `SwiftListCore/Models/FileRepresentation.swift`
+
+## Properties
+
+<ParamField path="icon" type="String" required>
+  The emoji icon representing the file type.
+  
+  Common icons:
+  - 📁 for directories
+  - 📄 for regular files
+  - 🔗 for symbolic links
+  - ⚙️ for executable files
+</ParamField>
+
+<ParamField path="color" type="String" required>
+  The ANSI color code for terminal output. Used to colorize file names based on file type.
+  
+  Typically uses values from the `TerminalColors` enum:
+  - `TerminalColors.blue.rawValue` for directories
+  - `TerminalColors.white.rawValue` for regular files
+  - `TerminalColors.yellow.rawValue` for symbolic links
+  - `TerminalColors.red.rawValue` for executable files
+</ParamField>
+
+<ParamField path="destination" type="String?" required>
+  The destination path for symbolic links.
+  
+  - `nil` for regular files and directories
+  - Contains the target path for symbolic links
+</ParamField>
+
+## Initializer
+
+```swift
+public init(
+    icon: String,
+    color: String,
+    destination: String? = nil
+)
+```
+
+<ParamField path="icon" type="String" required>
+  The emoji icon representing the file type.
+</ParamField>
+
+<ParamField path="color" type="String" required>
+  The ANSI color code for terminal output.
+</ParamField>
+
+<ParamField path="destination" type="String?" default="nil">
+  The destination path for symbolic links, or `nil` for regular files.
+</ParamField>
+
+## Usage Examples
+
+### Creating a Directory Representation
+
+```swift
+import SwiftListCore
+
+let directory = FileRepresentation(
+    icon: "📁",
+    color: TerminalColors.blue.rawValue,
+    destination: nil
+)
+
+print("\(directory.icon) \(directory.color)my-folder\(TerminalColors.reset.rawValue)")
+// Output: 📁 [blue]my-folder[reset]
+```
+
+### Creating a File Representation
+
+```swift
+let file = FileRepresentation(
+    icon: "📄",
+    color: TerminalColors.white.rawValue
+)
+
+print("\(file.icon) \(file.color)document.txt\(TerminalColors.reset.rawValue)")
+// Output: 📄 [white]document.txt[reset]
+```
+
+### Creating a Symbolic Link Representation
+
+```swift
+let symlink = FileRepresentation(
+    icon: "🔗",
+    color: TerminalColors.yellow.rawValue,
+    destination: "/usr/local/bin/actual-file"
+)
+
+if let dest = symlink.destination {
+    print("\(symlink.icon) \(symlink.color)link\(TerminalColors.reset.rawValue) -> \(dest)")
+}
+// Output: 🔗 [yellow]link[reset] -> /usr/local/bin/actual-file
+```
+
+### Creating an Executable Representation
+
+```swift
+let executable = FileRepresentation(
+    icon: "⚙️",
+    color: TerminalColors.red.rawValue
+)
+
+print("\(executable.icon) \(executable.color)script.sh\(TerminalColors.reset.rawValue)")
+// Output: ⚙️ [red]script.sh[reset]
+```
+
+## File Type Determination
+
+`FileRepresentation` is typically created by the `FileManagerHelper.determineType()` method, which automatically determines the appropriate icon and color based on file attributes:
+
+```swift
+import Foundation
+import SwiftListCore
+
+let fileURL = URL(fileURLWithPath: "/path/to/file")
+let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+
+let representation = FileManagerHelper.determineType(
+    of: fileURL,
+    attributes: attributes
+)
+
+print("Icon: \(representation.icon)")
+print("Color: \(representation.color)")
+if let dest = representation.destination {
+    print("Links to: \(dest)")
+}
+```
+
+## Using in Custom Formatters
+
+```swift
+import Foundation
+import SwiftListCore
+
+func formatFile(at url: URL) throws -> String {
+    let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+    let representation = FileManagerHelper.determineType(
+        of: url,
+        attributes: attributes
+    )
+    
+    var output = ""
+    output += representation.icon + " "
+    output += representation.color
+    output += url.lastPathComponent
+    output += TerminalColors.reset.rawValue
+    
+    if let destination = representation.destination {
+        output += " -> " + destination
+    }
+    
+    return output
+}
+
+// Use the formatter
+let homeDir = FileManager.default.homeDirectoryForCurrentUser
+let files = try FileManager.default.contentsOfDirectory(
+    at: homeDir,
+    includingPropertiesForKeys: nil
+)
+
+for file in files {
+    print(try formatFile(at: file))
+}
+```
+
+## Filtering by File Type
+
+```swift
+import Foundation
+import SwiftListCore
+
+// Get all directories in a path
+func getDirectories(at url: URL) throws -> [URL] {
+    let contents = try FileManager.default.contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: nil
+    )
+    
+    return contents.filter { fileURL in
+        let attributes = try? FileManager.default.attributesOfItem(
+            atPath: fileURL.path
+        )
+        guard let attrs = attributes else { return false }
+        
+        let representation = FileManagerHelper.determineType(
+            of: fileURL,
+            attributes: attrs
+        )
+        
+        // Check if it's a directory (blue color)
+        return representation.color == TerminalColors.blue.rawValue
+    }
+}
+
+let directories = try getDirectories(
+    at: FileManager.default.homeDirectoryForCurrentUser
+)
+print("Found \(directories.count) directories")
+```
+
+## Related
+
+- [FileManagerHelper](/api/file-manager-helper) - Determines file types and creates FileRepresentation
+- [TerminalColors](/api/terminal-colors) - ANSI color codes used in the color property
+- [DisplayOptions](/api/display-options) - Configure icon and color display

@@ -1,0 +1,348 @@
+---
+title: Examples
+description: Real-world usage examples for the sls command
+---
+
+## Basic Listings
+
+### List Current Directory with Visual Enhancements
+
+```bash
+sls --icons --color
+```
+
+**Output:**
+```
+📁 Documents    📁 Downloads    📁 Pictures    📁 Videos
+🎵 Music        📁 Projects     📁 Desktop     📄 README.md
+```
+
+Adding icons and colors makes it easier to distinguish file types at a glance.
+
+### View All Files Including Hidden
+
+```bash
+sls -a
+```
+
+**Output:**
+```
+.              ..             .git           .gitignore
+.env           .bashrc        Documents      Downloads
+Pictures       README.md
+```
+
+<Tip>
+  Hidden files (starting with `.`) often contain important configuration. Use `-a` to ensure you don't miss them.
+</Tip>
+
+## Detailed File Information
+
+### Long Format with Human-Readable Sizes
+
+```bash
+sls -l --human-readable
+```
+
+**Output:**
+```
+drwxr-xr-x  user  staff   5  4.0K  2026-02-28  14:32  Documents
+drwxr-xr-x  user  staff   3  4.0K  2026-03-01  09:15  Downloads
+-rw-r--r--  user  staff   1  2.0K  2026-02-25  16:20  README.md
+-rw-r--r--  user  staff   1  15M   2026-02-20  10:30  video.mp4
+-rwxr-xr-x  user  staff   1  128K  2026-03-01  08:00  app
+```
+
+The `--human-readable` flag converts byte sizes to K, M, G format for easier reading.
+
+### Directory Metadata Only
+
+```bash
+sls -ld ~/Projects
+```
+
+**Output:**
+```
+drwxr-xr-x  user  staff   24  4.0K  2026-02-28  14:32  /home/user/Projects
+```
+
+The `-d` flag shows information about the directory itself, not its contents.
+
+## Sorting Files
+
+### Find Recently Modified Files
+
+```bash
+sls -lt --human-readable
+```
+
+**Output:**
+```
+-rw-r--r--  user  staff   1  2.5K  2026-03-01  09:30  config.json
+-rwxr-xr-x  user  staff   1  128K  2026-03-01  08:00  app
+drwxr-xr-x  user  staff   5  4.0K  2026-02-28  14:32  Documents
+-rw-r--r--  user  staff   1  2.0K  2026-02-25  16:20  README.md
+-rw-r--r--  user  staff   1  15M   2026-02-20  10:30  video.mp4
+```
+
+Combining `-l`, `-t`, and `--human-readable` shows recently changed files first with readable sizes.
+
+<Tip>
+  Use `sls -lt | head -n 10` to show only the 10 most recently modified files.
+</Tip>
+
+### Find Largest Files
+
+```bash
+sls -lS --human-readable
+```
+
+**Output:**
+```
+-rw-r--r--  user  staff   1  15M   2026-02-20  10:30  video.mp4
+-rw-r--r--  user  staff   1  2.8M  2026-02-18  12:15  database.db
+-rwxr-xr-x  user  staff   1  128K  2026-03-01  08:00  app
+drwxr-xr-x  user  staff   5  4.0K  2026-02-28  14:32  Documents
+-rw-r--r--  user  staff   1  2.5K  2026-03-01  09:30  config.json
+```
+
+The `-S` flag sorts by size, showing largest files first.
+
+## Recursive Listings
+
+### List All Files Recursively
+
+```bash
+sls -r
+```
+
+**Output:**
+```
+Documents  Downloads  README.md  Projects
+
+Documents:
+report.pdf  notes.txt
+
+Downloads:
+archive.zip  installer.dmg
+
+Projects:
+src  tests  package.json
+
+Projects/src:
+index.js  utils.js
+
+Projects/tests:
+test.js
+```
+
+Recursive mode shows all subdirectories and their contents.
+
+### Limit Recursion Depth
+
+```bash
+sls -r -L 2
+```
+
+**Output:**
+```
+Documents  Downloads  README.md  Projects
+
+Documents:
+report.pdf  notes.txt
+
+Downloads:
+archive.zip  installer.dmg
+
+Projects:
+src  tests  package.json
+
+Projects/src:
+index.js  utils.js
+
+Projects/tests:
+test.js
+```
+
+The `-L 2` option limits recursion to 2 levels deep, preventing overly verbose output.
+
+<Note>
+  The `--depth-limit` option requires the `-r` flag to be set. It has no effect without recursion enabled.
+</Note>
+
+## Multiple Paths
+
+### Compare Multiple Directories
+
+```bash
+sls /tmp /var/log ~/Downloads
+```
+
+**Output:**
+```
+/tmp:
+tmp.txt      cache        sessions     uploads
+
+/var/log:
+system.log   auth.log     error.log    access.log
+
+/home/user/Downloads:
+archive.zip  installer.dmg  document.pdf
+```
+
+When listing multiple paths, each directory is labeled with its path.
+
+## Advanced Combinations
+
+### Full Project Overview
+
+```bash
+sls -rlaict --human-readable -L 3
+```
+
+This combines:
+- `-r` - Recursive listing
+- `-l` - Long format
+- `-a` - Include hidden files
+- `-i` - Show icons
+- `-c` - Colorize output
+- `-t` - Sort by time
+- `--human-readable` - Readable file sizes
+- `-L 3` - Limit to 3 levels deep
+
+<Tip>
+  This is excellent for getting a comprehensive view of a project structure with all metadata.
+</Tip>
+
+### Quick Size Check
+
+```bash
+sls -lS --human-readable | head -n 20
+```
+
+**Output:**
+```
+-rw-r--r--  user  staff   1  15M   2026-02-20  10:30  video.mp4
+-rw-r--r--  user  staff   1  2.8M  2026-02-18  12:15  database.db
+-rw-r--r--  user  staff   1  1.2M  2026-02-15  14:22  archive.tar.gz
+...
+```
+
+Pipe to `head` to show only the largest files.
+
+### Clean List for Scripts
+
+```bash
+sls -1a
+```
+
+**Output:**
+```
+.
+..
+.git
+.gitignore
+.env
+Documents
+Downloads
+README.md
+```
+
+The `-1` flag provides one file per line, perfect for piping to other commands or scripts.
+
+## File Type Indicators
+
+### Using Classify Flag
+
+```bash
+sls -F
+```
+
+**Output:**
+```
+Documents/    Downloads/    Pictures/    Videos/
+Music/        Projects/     app*         README.md
+```
+
+Indicators:
+- `/` - Directory
+- `*` - Executable
+- No indicator - Regular file
+
+### Combining Classify with Icons
+
+```bash
+sls -Fi --color
+```
+
+**Output:**
+```
+📁 Documents/    📁 Downloads/    📁 Pictures/    📁 Videos/
+🎵 Music/        📁 Projects/     ⚙️ app*         📄 README.md
+```
+
+Doubles up on visual indicators for maximum clarity.
+
+## Common Workflows
+
+<AccordionGroup>
+  <Accordion title="Finding recently changed code files">
+    ```bash
+    sls -rlt --human-readable src/
+    ```
+    
+    Recursively lists all files in `src/` directory sorted by modification time.
+  </Accordion>
+  
+  <Accordion title="Identifying space usage">
+    ```bash
+    sls -lS --human-readable
+    ```
+    
+    Shows files sorted by size to identify what's taking up space.
+  </Accordion>
+  
+  <Accordion title="Inspecting hidden configuration files">
+    ```bash
+    sls -la ~/ | grep "^\."
+    ```
+    
+    Lists all files in home directory and filters for hidden files.
+  </Accordion>
+  
+  <Accordion title="Quick directory structure overview">
+    ```bash
+    sls -r -L 2 --icons
+    ```
+    
+    Shows directory structure up to 2 levels with visual file type indicators.
+  </Accordion>
+  
+  <Accordion title="Checking file permissions">
+    ```bash
+    sls -la
+    ```
+    
+    Long format with all files shows complete permission information.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use --human-readable" icon="scale-balanced">
+    Always combine `-l` with `--human-readable` for easier size interpretation.
+  </Card>
+  
+  <Card title="Limit recursive depth" icon="layer-group">
+    When using `-r`, add `-L` to prevent overwhelming output in deep directories.
+  </Card>
+  
+  <Card title="Combine visual flags" icon="eye">
+    Use `-ic` together (`--icons --color`) for maximum visual clarity.
+  </Card>
+  
+  <Card title="Sort intentionally" icon="arrow-down-1-9">
+    Use `-t` for recent files or `-S` for large files rather than default alphabetical.
+  </Card>
+</CardGroup>

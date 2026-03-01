@@ -1,0 +1,153 @@
+---
+title: Basic Usage
+description: Core usage patterns for the sls command
+---
+
+## Listing the Current Directory
+
+Run `sls` without any arguments to list the current directory:
+
+```bash
+sls
+```
+
+**Example output:**
+```
+Documents    Downloads    Pictures    Videos
+Music        Projects     Desktop     README.md
+```
+
+By default, `sls` displays files in a multi-column format, sorted alphabetically by name.
+
+## Listing a Specific Path
+
+Provide a path as an argument to list that location:
+
+```bash
+sls /usr/local/bin
+```
+
+**Example output:**
+```
+docker       git          node         python3
+kubectl      npm          terraform    yarn
+```
+
+### Relative Paths
+
+You can use relative paths from your current location:
+
+```bash
+sls ../
+sls ./src
+sls ~/Documents
+```
+
+## Listing Multiple Paths
+
+`sls` can list multiple directories in a single command. When listing multiple paths, each directory name is shown as a header:
+
+```bash
+sls /tmp /var/log
+```
+
+**Example output:**
+```
+/tmp:
+tmp.txt      cache        sessions     uploads
+
+/var/log:
+system.log   auth.log     error.log    access.log
+```
+
+Each directory is separated by a blank line for clarity.
+
+## Displaying Hidden Files
+
+By default, hidden files (those starting with `.`) are not shown. Use the `-a` or `--all` flag:
+
+```bash
+sls -a
+```
+
+**Example output:**
+```
+.git         .gitignore   .env         Documents
+.bashrc      .profile     Downloads    Pictures
+```
+
+## One File Per Line
+
+For easier parsing or readability, display each file on its own line:
+
+```bash
+sls -1
+```
+
+**Example output:**
+```
+Documents
+Downloads
+Music
+Pictures
+README.md
+Videos
+```
+
+This format is particularly useful when piping output to other commands.
+
+## Long Format
+
+The long format (`-l` or `--long`) displays detailed file attributes:
+
+```bash
+sls -l
+```
+
+**Example output:**
+```
+drwxr-xr-x  user  staff   5  4096  2026-02-28  14:32  Documents
+drwxr-xr-x  user  staff   3  4096  2026-03-01  09:15  Downloads
+-rw-r--r--  user  staff   1  2048  2026-02-25  16:20  README.md
+drwxr-xr-x  user  staff   8  4096  2026-02-20  11:45  Projects
+```
+
+Columns from left to right:
+1. **Permissions** - File mode (read, write, execute)
+2. **Owner** - File owner username
+3. **Group** - File group name
+4. **Links** - Number of hard links
+5. **Size** - File size in bytes
+6. **Date** - Last modification date
+7. **Time** - Last modification time
+8. **Name** - File or directory name
+
+## Combining Options
+
+Options can be combined for more powerful output:
+
+```bash
+# Long format with hidden files
+sls -la
+
+# One per line with all files
+sls -1a
+
+# Long format with human-readable sizes
+sls -l --human-readable
+```
+
+**Example output (long + human-readable):**
+```
+drwxr-xr-x  user  staff   5  4.0K  2026-02-28  14:32  Documents
+drwxr-xr-x  user  staff   3  4.0K  2026-03-01  09:15  Downloads
+-rw-r--r--  user  staff   1  2.0K  2026-02-25  16:20  README.md
+-rw-r--r--  user  staff   1  1.5M  2026-02-20  10:30  video.mp4
+```
+
+## Next Steps
+
+Now that you understand basic usage, explore:
+
+- [Options Reference](/commands/options) - Complete list of all available flags
+- [Examples](/commands/examples) - Real-world usage scenarios

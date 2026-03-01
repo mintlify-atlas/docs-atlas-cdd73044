@@ -1,0 +1,223 @@
+---
+title: Sorting
+description: Control how List orders files in directory listings
+---
+
+List provides three sorting modes to organize files in different ways. The `SortOption` enum defines how files are ordered when displaying directory contents.
+
+## Overview
+
+Sorting is controlled by the `sortBy` field in `DisplayOptions`. By default, files are sorted alphabetically by name, but you can also sort by modification time or file size.
+
+Source: `Sources/SwiftListCore/Configuration/SortOption.swift:13-22`
+
+## Sort Options
+
+### Sort by Name (Default)
+
+Sorts files alphabetically by filename using localized comparison. This is the default behavior.
+
+**Enum value:** `SortOption.name`
+
+**CLI usage:** Default behavior (no flag needed)
+
+<CodeGroup>
+```bash Terminal
+$ sls
+Documents  Downloads  README.md  package.json  src  tests
+```
+
+```swift Swift API
+let options = DisplayOptions(sortBy: .name)
+let listing = try FileManagerHelper.contents(with: options)
+```
+</CodeGroup>
+
+**Implementation:** Uses `localizedCompare` for natural sorting order (e.g., "file2.txt" comes before "file10.txt").
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:224-227`
+
+### Sort by Time
+
+Sorts files by modification time, with the most recently modified files appearing first.
+
+**Enum value:** `SortOption.time`
+
+**CLI flag:** `-t`
+
+<CodeGroup>
+```bash Terminal
+$ sls -t
+README.md  src  package.json  Downloads  Documents  tests
+```
+
+```bash With long format
+$ sls -lt
+493 user staff 1  2.3 KB 2026-03-01 10:30 README.md
+493 user staff 3  96 bytes 2026-03-01 09:15 src
+493 user staff 1  1.5 KB 2026-02-28 14:20 package.json
+493 user staff 4  128 bytes 2026-02-27 11:45 Downloads
+493 user staff 5  160 bytes 2026-02-25 08:30 Documents
+493 user staff 2  64 bytes 2026-02-24 16:00 tests
+```
+
+```swift Swift API
+let options = DisplayOptions(
+    long: true,
+    sortBy: .time
+)
+```
+</CodeGroup>
+
+**Use cases:**
+- Finding recently modified files
+- Tracking recent work
+- Identifying stale files
+
+**Implementation:** Compares `contentModificationDate` resource values. Files without modification dates are treated as having `Date.distantPast`.
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:228-233`
+
+### Sort by Size
+
+Sorts files by size, with the largest files appearing first.
+
+**Enum value:** `SortOption.size`
+
+**CLI flag:** `-S`
+
+<CodeGroup>
+```bash Terminal
+$ sls -S
+Downloads  Documents  README.md  package.json  src  tests
+```
+
+```bash With long format and human-readable sizes
+$ sls -lSh
+493 user staff 4  45.2 MB 2026-02-27 11:45 Downloads
+493 user staff 5  12.8 MB 2026-02-25 08:30 Documents
+493 user staff 1  2.3 KB  2026-03-01 10:30 README.md
+493 user staff 1  1.5 KB  2026-02-28 14:20 package.json
+493 user staff 3  96 bytes 2026-03-01 09:15 src
+493 user staff 2  64 bytes 2026-02-24 16:00 tests
+```
+
+```swift Swift API
+let options = DisplayOptions(
+    long: true,
+    humanReadable: true,
+    sortBy: .size
+)
+```
+</CodeGroup>
+
+**Use cases:**
+- Finding large files consuming disk space
+- Identifying files for cleanup
+- Understanding storage usage patterns
+
+**Implementation:** Compares `fileSize` resource values. Files without size information are treated as 0 bytes.
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:234-238`
+
+## Combining Sort with Other Options
+
+Sorting works seamlessly with all other display options:
+
+### Sort with Recursion
+
+```bash
+# Show all files recursively, sorted by time
+$ sls -Rt
+
+# Recurse with depth limit, sorted by size
+$ sls -RS --depth 2
+```
+
+Each directory level is sorted independently using the specified sort option.
+
+### Sort with Long Format
+
+```bash
+# Long format sorted by size with human-readable output
+$ sls -lSh
+
+# Long format sorted by time
+$ sls -lt
+```
+
+Combining sort with `-l` makes it easy to verify the sort order visually.
+
+### Sort with Filters
+
+```bash
+# Show all files (including hidden) sorted by time
+$ sls -at
+
+# Show one per line, sorted by size
+$ sls -1S
+```
+
+## Sort Implementation Details
+
+The sorting algorithm is applied in `FileManagerHelper.contents()` after retrieving directory contents:
+
+```swift
+let sortedContents = contents.sorted { url1, url2 in
+    switch options.sortBy {
+    case .name:
+        return url1.lastPathComponent.localizedCompare(url2.lastPathComponent)
+            == .orderedAscending
+    case .time:
+        let date1 = try? url1.resourceValues(forKeys: [.contentModificationDateKey])
+            .contentModificationDate
+        let date2 = try? url2.resourceValues(forKeys: [.contentModificationDateKey])
+            .contentModificationDate
+        return (date1 ?? Date.distantPast) > (date2 ?? Date.distantPast)
+    case .size:
+        let size1 = try? url1.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        let size2 = try? url2.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        return (size1 ?? 0) > (size2 ?? 0)
+    }
+}
+```
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:222-239`
+
+## Performance Considerations
+
+- **Name sorting** is the fastest, as it only uses filenames already in memory
+- **Time sorting** requires reading modification date metadata for each file
+- **Size sorting** requires reading size metadata for each file
+
+For large directories, name sorting will be noticeably faster than time or size sorting.
+
+## Tips
+
+<Tip>
+  Combine `-l` (long format) with `-t` or `-S` to see the values being sorted by:
+  
+  ```bash
+  sls -lt  # See modification dates
+  sls -lS  # See file sizes
+  ```
+</Tip>
+
+<Tip>
+  Use `-h` (human-readable) with `-S` to easily understand file sizes:
+  
+  ```bash
+  sls -lSh  # Shows "2.3 MB" instead of "2,345,678 bytes"
+  ```
+</Tip>
+
+<Note>
+  When sorting by time or size, files without the requested metadata (e.g., files where metadata can't be read) are treated as having:
+  - **Time:** `Date.distantPast` (sorted to the end)
+  - **Size:** `0` bytes (sorted to the end)
+</Note>
+
+## Related
+
+- [Display Options](/configuration/display-options) - All configuration options
+- [Color and Icons](/configuration/color-and-icons) - Visual file type indicators

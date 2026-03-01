@@ -1,0 +1,229 @@
+---
+title: DisplayOptions
+description: Configuration options for file listing display
+---
+
+The `DisplayOptions` struct controls how files are displayed, sorted, and formatted when listing directory contents.
+
+## Type Definition
+
+```swift
+public struct DisplayOptions
+```
+
+Defined in: `SwiftListCore/Configuration/DisplayOptions.swift`
+
+## Properties
+
+<ParamField path="location" type="URL?" default="nil">
+  The location to list files from. If `nil`, uses the current working directory.
+</ParamField>
+
+<ParamField path="all" type="Bool" default="false">
+  Whether to show hidden files (files starting with `.`).
+</ParamField>
+
+<ParamField path="long" type="Bool" default="false">
+  Whether to use long listing format, which displays detailed information including permissions, owner, group, link count, size, and modification date.
+</ParamField>
+
+<ParamField path="recurse" type="Bool" default="false">
+  Whether to recurse into subdirectories. When enabled, lists contents of all subdirectories.
+</ParamField>
+
+<ParamField path="color" type="Bool" default="false">
+  Whether to colorize the output using ANSI color codes. Different file types are displayed in different colors.
+</ParamField>
+
+<ParamField path="icons" type="Bool" default="false">
+  Whether to show file type icons (emoji) before file names. Uses 📁 for directories, 📄 for files, 🔗 for symbolic links, and ⚙️ for executables.
+</ParamField>
+
+<ParamField path="oneLine" type="Bool" default="false">
+  Whether to display one file per line. Useful for scripts and parseable output.
+</ParamField>
+
+<ParamField path="humanReadable" type="Bool" default="false">
+  Whether to show human-readable file sizes (e.g., "1.5 MB" instead of "1572864 bytes"). Only applies when `long` is `true`.
+</ParamField>
+
+<ParamField path="directoryOnly" type="Bool" default="false">
+  Whether to list directories themselves rather than their contents. When `true`, shows information about the directory rather than listing what's inside.
+</ParamField>
+
+<ParamField path="classify" type="Bool" default="false">
+  Whether to append indicators to entries. Adds `/` to directories and `*` to executable files.
+</ParamField>
+
+<ParamField path="sortBy" type="SortOption" default=".name">
+  How to sort the file listing. Options are `.name` (alphabetically), `.time` (by modification time, newest first), or `.size` (by size, largest first).
+</ParamField>
+
+<ParamField path="depthLimit" type="Int?" default="nil">
+  Maximum recursion depth when `recurse` is `true`. `nil` means unlimited depth. A value of `0` means only the initial directory, `1` includes immediate subdirectories, etc.
+</ParamField>
+
+## Initializer
+
+```swift
+public init(
+    location: URL? = nil,
+    all: Bool = false,
+    long: Bool = false,
+    recurse: Bool = false,
+    color: Bool = false,
+    icons: Bool = false,
+    oneLine: Bool = false,
+    humanReadable: Bool = false,
+    directoryOnly: Bool = false,
+    classify: Bool = false,
+    sortBy: SortOption = .name,
+    depthLimit: Int? = nil
+)
+```
+
+All parameters have default values, so you can create a `DisplayOptions` instance with only the options you need to customize.
+
+## Usage Examples
+
+### Basic Listing
+
+```swift
+import SwiftListCore
+
+// Simple listing with defaults (current directory, alphabetically)
+let options = DisplayOptions()
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Long Format with Details
+
+```swift
+// Show detailed information with human-readable sizes
+let options = DisplayOptions(
+    long: true,
+    humanReadable: true
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Colorized with Icons
+
+```swift
+// Colorful output with file type icons
+let options = DisplayOptions(
+    color: true,
+    icons: true,
+    sortBy: .name
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Show All Files Including Hidden
+
+```swift
+// Include hidden files
+let options = DisplayOptions(
+    all: true,
+    oneLine: true
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Recursive Listing with Depth Limit
+
+```swift
+// Recursively list up to 3 levels deep
+let options = DisplayOptions(
+    recurse: true,
+    depthLimit: 3,
+    icons: true,
+    sortBy: .time
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Sort by Modification Time
+
+```swift
+// Show most recently modified files first
+let options = DisplayOptions(
+    long: true,
+    humanReadable: true,
+    sortBy: .time
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Sort by File Size
+
+```swift
+// Show largest files first
+let options = DisplayOptions(
+    long: true,
+    humanReadable: true,
+    sortBy: .size
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### List Specific Directory
+
+```swift
+// List a specific directory
+let documentsURL = FileManager.default.urls(
+    for: .documentDirectory,
+    in: .userDomainMask
+).first
+
+let options = DisplayOptions(
+    location: documentsURL,
+    all: true,
+    long: true,
+    icons: true
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Directory Information Only
+
+```swift
+// Show info about the directory itself, not its contents
+let options = DisplayOptions(
+    location: URL(fileURLWithPath: "/usr/local"),
+    directoryOnly: true,
+    long: true
+)
+let listing = try FileManagerHelper.contents(with: options)
+```
+
+### Complete Example
+
+```swift
+import Foundation
+import SwiftListCore
+
+// Full-featured listing similar to 'ls -lah'
+let options = DisplayOptions(
+    all: true,           // Show hidden files
+    long: true,          // Detailed format
+    color: true,         // Colorize output
+    icons: true,         // Show icons
+    humanReadable: true, // Human-readable sizes
+    classify: true,      // Append type indicators
+    sortBy: .name        // Sort alphabetically
+)
+
+do {
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+} catch {
+    print("Error: \(error.localizedDescription)")
+}
+```
+
+## Related
+
+- [FileManagerHelper](/api/file-manager-helper) - Use DisplayOptions with this class
+- [SortOption](/api/sort-option) - Sorting options enumeration
+- [TerminalColors](/api/terminal-colors) - Colors used when `color` is enabled

@@ -1,0 +1,253 @@
+---
+title: Options Reference
+description: Complete reference for all sls command flags and options
+---
+
+## Overview
+
+This page documents all available flags and options for the `sls` command. Options can be specified in short form (single dash, single letter) or long form (double dash, full word).
+
+## Display Options
+
+### All Files
+
+<ParamField path="-a, --all" type="flag" default="false">
+  Display all files, including hidden files (those starting with `.`).
+  
+  By default, hidden files are not shown.
+  
+  ```bash
+  sls -a
+  sls --all
+  ```
+</ParamField>
+
+### Long Format
+
+<ParamField path="-l, --long" type="flag" default="false">
+  Display file attributes in long format, one file per line.
+  
+  Shows: permissions, owner, group, links, size, date, time, and name.
+  
+  ```bash
+  sls -l
+  sls --long
+  ```
+</ParamField>
+
+### One Line
+
+<ParamField path="-1, --one-line" type="flag" default="false">
+  Display each file on its own line.
+  
+  Useful for piping output to other commands or for simple readability.
+  
+  ```bash
+  sls -1
+  sls --one-line
+  ```
+</ParamField>
+
+### Human Readable Sizes
+
+<ParamField path="--human-readable" type="flag" default="false">
+  Display file sizes in human-readable format (K, M, G).
+  
+  Only available in long form. Typically used with `-l` flag.
+  
+  ```bash
+  sls -l --human-readable
+  ```
+</ParamField>
+
+## Visual Enhancements
+
+### Colors
+
+<ParamField path="-c, --color" type="flag" default="false">
+  Colorize the output based on file type.
+  
+  Different colors help distinguish directories, executables, symlinks, etc.
+  
+  ```bash
+  sls -c
+  sls --color
+  ```
+</ParamField>
+
+### Icons
+
+<ParamField path="-i, --icons" type="flag" default="false">
+  Display icons denoting file type.
+  
+  Adds visual indicators before filenames to show file types at a glance.
+  
+  ```bash
+  sls -i
+  sls --icons
+  ```
+</ParamField>
+
+### Classify
+
+<ParamField path="-F, --classify" type="flag" default="false">
+  Append indicator characters to entries.
+  
+  Adds `/` for directories, `*` for executables, and other indicators.
+  
+  ```bash
+  sls -F
+  sls --classify
+  ```
+</ParamField>
+
+## Recursion and Directory Handling
+
+### Recurse
+
+<ParamField path="-r, --recurse" type="flag" default="false">
+  Recurse into directories, listing all subdirectories and their contents.
+  
+  Use with `--depth-limit` to control how deep the recursion goes.
+  
+  ```bash
+  sls -r
+  sls --recurse
+  ```
+</ParamField>
+
+### Depth Limit
+
+<ParamField path="-L, --depth-limit" type="option" default="unlimited">
+  Limit recursion depth when using `-r` flag.
+  
+  Requires the `--recurse` flag to be set. Value must be a positive integer.
+  
+  ```bash
+  sls -r -L 2
+  sls --recurse --depth-limit 3
+  ```
+</ParamField>
+
+### Directory Only
+
+<ParamField path="-d, --directory" type="flag" default="false">
+  List directories themselves, not their contents.
+  
+  Useful for viewing directory metadata without listing files inside.
+  
+  ```bash
+  sls -d /usr/local
+  sls --directory ~/Documents
+  ```
+</ParamField>
+
+## Sorting Options
+
+<Note>
+  Only one sort option can be active at a time. If multiple sort flags are specified, the last one takes precedence. Default sorting is alphabetical by name.
+</Note>
+
+### Sort by Time
+
+<ParamField path="-t, --sort-time" type="flag" default="false">
+  Sort by modification time, newest first.
+  
+  Overrides the default alphabetical sorting.
+  
+  ```bash
+  sls -t
+  sls --sort-time
+  ```
+</ParamField>
+
+### Sort by Size
+
+<ParamField path="-S, --sort-size" type="flag" default="false">
+  Sort by file size, largest first.
+  
+  Overrides the default alphabetical sorting.
+  
+  ```bash
+  sls -S
+  sls --sort-size
+  ```
+</ParamField>
+
+## Arguments
+
+### Paths
+
+<ParamField path="paths" type="argument" default="current directory">
+  One or more paths to list.
+  
+  If omitted, lists the current directory. Multiple paths can be specified and each will be listed separately.
+  
+  ```bash
+  sls /tmp
+  sls ~/Documents ~/Downloads
+  sls /var/log /etc
+  ```
+</ParamField>
+
+## Common Combinations
+
+<AccordionGroup>
+  <Accordion title="Detailed listing with readable sizes">
+    ```bash
+    sls -l --human-readable
+    ```
+    
+    Shows file details with sizes in K, M, G format instead of bytes.
+  </Accordion>
+  
+  <Accordion title="All files with icons and colors">
+    ```bash
+    sls -a -i -c
+    ```
+    
+    Displays hidden files with visual enhancements for better readability.
+  </Accordion>
+  
+  <Accordion title="Recursive with depth limit">
+    ```bash
+    sls -r -L 2
+    ```
+    
+    Lists subdirectories up to 2 levels deep.
+  </Accordion>
+  
+  <Accordion title="Recent files first">
+    ```bash
+    sls -l -t --human-readable
+    ```
+    
+    Shows detailed file information sorted by modification time.
+  </Accordion>
+  
+  <Accordion title="Largest files first">
+    ```bash
+    sls -l -S --human-readable
+    ```
+    
+    Shows detailed file information sorted by size, largest first.
+  </Accordion>
+</AccordionGroup>
+
+## Version and Help
+
+### Display Help
+
+```bash
+sls --help
+```
+
+Shows usage information and a summary of all available options.
+
+### Display Version
+
+```bash
+sls --version
+```
+
+Shows the installed version of sls (currently 1.5.0).

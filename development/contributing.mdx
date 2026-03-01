@@ -1,0 +1,557 @@
+---
+title: Contributing
+description: Guide to contributing to List (sls)
+---
+
+## Welcome Contributors
+
+Thank you for your interest in contributing to List! This guide will help you get started with development and explain our contribution process.
+
+<Info>
+  List is an open-source project that welcomes contributions from developers of all skill levels. Whether you're fixing a bug, adding a feature, or improving documentation, your help is appreciated!
+</Info>
+
+## Getting Started
+
+<Steps>
+  <Step title="Fork and Clone">
+    Fork the repository on GitHub and clone your fork:
+    
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/list.git
+    cd list
+    ```
+  </Step>
+  
+  <Step title="Set Up Development Environment">
+    Ensure you have the required tools:
+    
+    - Swift 6.2 or later
+    - macOS 13+ (for macOS development) or Linux
+    - Git
+    
+    Verify your Swift installation:
+    ```bash
+    swift --version
+    # Should output Swift version 6.2 or later
+    ```
+  </Step>
+  
+  <Step title="Build the Project">
+    Build List to ensure everything works:
+    
+    ```bash
+    swift build
+    ```
+    
+    Run the built executable:
+    ```bash
+    .build/debug/sls
+    ```
+  </Step>
+  
+  <Step title="Run Tests">
+    Verify that all tests pass:
+    
+    ```bash
+    swift test
+    ```
+    
+    All tests should pass before you start making changes.
+  </Step>
+</Steps>
+
+## Development Workflow
+
+### Creating a Feature Branch
+
+Always create a new branch for your changes:
+
+```bash
+# Create and switch to a new branch
+git checkout -b feature/your-feature-name
+
+# Or for bug fixes
+git checkout -b fix/issue-description
+```
+
+<Tip>
+  Use descriptive branch names that explain what you're working on, such as `feature/add-json-output` or `fix/symlink-handling`.
+</Tip>
+
+### Making Changes
+
+<Steps>
+  <Step title="Code Your Changes">
+    Make your changes following the project structure:
+    
+    - **CLI changes:** Edit files in `Sources/SwiftListCLI/`
+    - **Core logic:** Edit files in `Sources/SwiftListCore/`
+    - **Tests:** Edit or add to `Tests/SwiftListTests.swift`
+  </Step>
+  
+  <Step title="Format Your Code">
+    The project uses `.swift-format` for consistent code style. Format your changes:
+    
+    ```bash
+    swift-format format -i -r Sources/ Tests/
+    ```
+    
+    <Warning>
+      All code must follow the project's formatting rules defined in `.swift-format`. CI will fail if code is not properly formatted.
+    </Warning>
+  </Step>
+  
+  <Step title="Add or Update Tests">
+    Add tests for your changes in `Tests/SwiftListTests.swift`:
+    
+    ```swift
+    import Testing
+    import SwiftListCore
+    import SwiftListCLI
+    
+    @Test
+    func testYourFeature() {
+        // Your test code here
+    }
+    ```
+    
+    Run tests to ensure they pass:
+    ```bash
+    swift test
+    ```
+  </Step>
+  
+  <Step title="Build and Test">
+    Verify everything still works:
+    
+    ```bash
+    # Clean build
+    swift package clean
+    swift build
+    
+    # Run all tests
+    swift test
+    
+    # Test manually
+    .build/debug/sls --long --color
+    ```
+  </Step>
+</Steps>
+
+## Code Style Guidelines
+
+### Swift Formatting Rules
+
+The project uses `.swift-format` configuration with these key settings:
+
+- **Indentation:** 4 spaces (not tabs)
+- **Line length:** 180 characters maximum
+- **File-scoped declarations:** Use private access level
+- **Documentation:** Required for public APIs
+
+### Code Organization
+
+Follow the existing module structure:
+
+```
+Sources/
+├── SwiftList/           # Executable entry point
+│   └── main.swift       # Minimal bootstrap code
+├── SwiftListCLI/        # Command-line interface
+│   └── ListCommand.swift
+└── SwiftListCore/       # Core business logic
+    ├── Configuration/   # Options and settings
+    ├── Models/         # Data models
+    └── Utilities/      # Helper classes
+```
+
+<CardGroup cols={2}>
+  <Card title="Do" icon="check">
+    - Follow existing patterns
+    - Add documentation comments
+    - Write tests for new features
+    - Use meaningful variable names
+    - Keep functions focused and small
+  </Card>
+  <Card title="Don't" icon="xmark">
+    - Mix CLI and core logic
+    - Use force unwrapping (!)
+    - Skip error handling
+    - Ignore compiler warnings
+    - Submit unformatted code
+  </Card>
+</CardGroup>
+
+### Documentation Comments
+
+Add documentation for public APIs:
+
+```swift
+/// Brief one-line summary of the function.
+///
+/// Detailed description explaining what the function does,
+/// its parameters, and any important behavior.
+///
+/// ## Example
+///
+/// ```swift
+/// let result = myFunction(value: 42)
+/// ```
+///
+/// - Parameter value: Description of the parameter
+/// - Returns: Description of what is returned
+/// - Throws: Description of errors that can be thrown
+public func myFunction(value: Int) throws -> String {
+    // Implementation
+}
+```
+
+## Testing Strategy
+
+### Writing Tests
+
+List uses the modern Swift Testing framework (0.11.0+):
+
+<CodeGroup>
+```swift Basic Test
+import Testing
+import SwiftListCore
+
+@Test
+func testSortingByName() {
+    let options = DisplayOptions(sortBy: .name)
+    // Test implementation
+}
+```
+
+```swift Parameterized Test
+import Testing
+
+@Test(arguments: [
+    SortOption.name,
+    SortOption.size,
+    SortOption.time
+])
+func testDifferentSortOptions(option: SortOption) {
+    let options = DisplayOptions(sortBy: option)
+    // Test each sort option
+}
+```
+</CodeGroup>
+
+### What to Test
+
+<AccordionGroup>
+  <Accordion title="Core Functionality">
+    - File listing with different options
+    - Sorting (by name, size, time)
+    - Filtering (hidden files, etc.)
+    - File type detection
+    - Symbolic link handling
+    - Recursive directory traversal
+  </Accordion>
+  
+  <Accordion title="Edge Cases">
+    - Empty directories
+    - Permission denied scenarios
+    - Broken symbolic links
+    - Very long file names
+    - Special characters in file names
+    - Depth limit in recursive mode
+  </Accordion>
+  
+  <Accordion title="Display Options">
+    - Long format output
+    - Color codes applied correctly
+    - Icon display
+    - Terminal width wrapping
+    - Human-readable sizes
+  </Accordion>
+</AccordionGroup>
+
+### Running Tests
+
+```bash
+# Run all tests
+swift test
+
+# Run with verbose output
+swift test --verbose
+
+# Run in parallel (default)
+swift test --parallel
+```
+
+## Adding New Features
+
+### Feature Development Checklist
+
+When adding a new feature:
+
+- [ ] Create a feature branch
+- [ ] Design the feature (consider architecture impact)
+- [ ] Update `DisplayOptions` if needed (new configuration)
+- [ ] Add CLI flags to `ListCommand` if needed
+- [ ] Implement core logic in `SwiftListCore`
+- [ ] Write comprehensive tests
+- [ ] Update documentation comments
+- [ ] Format code with `swift-format`
+- [ ] Run full test suite
+- [ ] Test manually with various scenarios
+- [ ] Update README if user-facing
+- [ ] Submit pull request
+
+### Example: Adding a New Sort Option
+
+<Steps>
+  <Step title="Update SortOption Enum">
+    Add the new option to `Sources/SwiftListCore/Configuration/SortOption.swift`:
+    
+    ```swift
+    public enum SortOption: String, ExpressibleByArgument {
+        case name
+        case time
+        case size
+        case extension  // New option
+    }
+    ```
+  </Step>
+  
+  <Step title="Add CLI Flag">
+    Add the flag to `Sources/SwiftListCLI/ListCommand.swift`:
+    
+    ```swift
+    @Flag(name: [.customShort("X"), .long], 
+          help: "Sort by file extension.")
+    var sortExtension = false
+    ```
+    
+    Update the `run()` method to handle it.
+  </Step>
+  
+  <Step title="Implement Sorting Logic">
+    Update `FileManagerHelper.contents()` in `Sources/SwiftListCore/Utilities/FileManagerHelper.swift`:
+    
+    ```swift
+    case .extension:
+        return url1.pathExtension.localizedCompare(url2.pathExtension) 
+            == .orderedAscending
+    ```
+  </Step>
+  
+  <Step title="Add Tests">
+    Test the new sort option in `Tests/SwiftListTests.swift`:
+    
+    ```swift
+    @Test
+    func testSortByExtension() {
+        let options = DisplayOptions(sortBy: .extension)
+        // Verify sorting works correctly
+    }
+    ```
+  </Step>
+</Steps>
+
+## Continuous Integration
+
+The project uses GitHub Actions for CI/CD:
+
+**Location:** `.github/workflows/release.yml`
+
+### CI Pipeline
+
+The CI pipeline automatically:
+
+1. **Builds** the project on multiple platforms:
+   - macOS (x86_64 and arm64)
+   - Linux (x86_64 and arm64)
+
+2. **Runs tests** on all platforms
+
+3. **Creates releases** when tags are pushed:
+   - Builds release binaries
+   - Uploads artifacts to GitHub Releases
+
+<Info>
+  All pull requests must pass CI checks before they can be merged. This ensures code quality and prevents breaking changes.
+</Info>
+
+### Build Matrix
+
+Builds are tested on:
+
+- macOS 14 with Swift 6.2 (x86_64 and arm64)
+- Ubuntu 22.04 with Swift 6.2 (x86_64 and arm64)
+
+## Submitting Changes
+
+### Pull Request Process
+
+<Steps>
+  <Step title="Commit Your Changes">
+    Make meaningful commits:
+    
+    ```bash
+    git add .
+    git commit -m "Add feature: sort by file extension"
+    ```
+    
+    Use clear, descriptive commit messages that explain what and why.
+  </Step>
+  
+  <Step title="Push to Your Fork">
+    Push your branch to GitHub:
+    
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+  
+  <Step title="Create Pull Request">
+    Go to the [List repository](https://github.com/mac9sb/list) and create a pull request:
+    
+    - Describe what your changes do
+    - Reference any related issues
+    - Explain your approach if complex
+    - Include screenshots for UI changes
+  </Step>
+  
+  <Step title="Address Review Feedback">
+    Respond to code review comments:
+    
+    - Make requested changes
+    - Push updates to your branch
+    - Reply to comments
+    - Mark conversations as resolved
+  </Step>
+</Steps>
+
+### Pull Request Template
+
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+- [ ] Tests pass locally
+- [ ] Added new tests
+- [ ] Tested manually
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Code is formatted with swift-format
+- [ ] Documentation updated
+- [ ] No new warnings
+```
+
+## Reporting Issues
+
+Found a bug or have a feature request?
+
+<CardGroup cols={2}>
+  <Card title="Report Bug" icon="bug" href="https://github.com/mac9sb/list/issues/new">
+    Create a bug report with details and reproduction steps
+  </Card>
+  <Card title="Request Feature" icon="lightbulb" href="https://github.com/mac9sb/list/issues/new">
+    Suggest a new feature or enhancement
+  </Card>
+</CardGroup>
+
+### Bug Report Template
+
+Include the following information:
+
+- **Description:** Clear description of the bug
+- **Steps to reproduce:** Exact commands to trigger the bug
+- **Expected behavior:** What should happen
+- **Actual behavior:** What actually happens
+- **Environment:**
+  - OS: (e.g., macOS 14.2, Ubuntu 22.04)
+  - Swift version: (output of `swift --version`)
+  - List version: (output of `sls --version`)
+- **Additional context:** Screenshots, logs, etc.
+
+## Community Guidelines
+
+### Code of Conduct
+
+- Be respectful and inclusive
+- Welcome newcomers and help them learn
+- Provide constructive feedback
+- Focus on what is best for the project
+- Accept constructive criticism gracefully
+
+### Communication
+
+- **Issues:** Bug reports and feature requests
+- **Pull Requests:** Code contributions
+- **Discussions:** General questions and ideas
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/mac9sb/list">
+    View source code and open issues
+  </Card>
+  <Card title="Swift Documentation" icon="book" href="https://swift.org/documentation/">
+    Learn more about Swift
+  </Card>
+  <Card title="ArgumentParser" icon="terminal" href="https://github.com/apple/swift-argument-parser">
+    CLI framework documentation
+  </Card>
+  <Card title="Swift Testing" icon="flask" href="https://github.com/swiftlang/swift-testing">
+    Testing framework guide
+  </Card>
+</CardGroup>
+
+## Advanced Topics
+
+### Platform-Specific Code
+
+When adding platform-specific features:
+
+```swift
+#if canImport(Darwin)
+import Darwin
+// macOS-specific code
+#elseif canImport(Glibc)
+import Glibc
+// Linux-specific code
+#endif
+```
+
+### Performance Considerations
+
+- Use efficient file system APIs
+- Avoid unnecessary file attribute queries
+- Consider memory usage for large directories
+- Profile performance for recursive operations
+
+### Security
+
+- Never follow symbolic links without permission
+- Handle permission errors gracefully
+- Validate file paths
+- Be careful with user-provided input
+
+## Next Steps
+
+Ready to contribute?
+
+1. **Pick an issue** from the [GitHub issues page](https://github.com/mac9sb/list/issues)
+2. **Comment on the issue** to let others know you're working on it
+3. **Follow this guide** to implement your changes
+4. **Submit a pull request** when ready
+
+<Tip>
+  Start with issues labeled "good first issue" if you're new to the project!
+</Tip>
+
+Thank you for contributing to List!

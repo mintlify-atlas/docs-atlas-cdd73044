@@ -1,0 +1,289 @@
+---
+title: Color and Icons
+description: Visual indicators for file types in List output
+---
+
+List provides visual cues to help you quickly identify different file types through color-coding and emoji icons. These features enhance readability and make it easier to scan directory listings.
+
+## Overview
+
+List uses two visual systems:
+
+- **Colors**: ANSI terminal color codes that colorize file names based on type
+- **Icons**: Emoji icons that appear before file names
+
+Both features are opt-in and can be used independently or together.
+
+Sources:
+- `Sources/SwiftListCore/Utilities/TerminalColors.swift`
+- `Sources/SwiftListCore/Models/FileRepresentation.swift`
+- `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:32-59`
+
+## Color System
+
+Enable colors with the `--color` flag:
+
+```bash
+$ sls --color
+```
+
+### Color Mappings
+
+List uses the following ANSI color scheme:
+
+| File Type | Color | ANSI Code | Use Case |
+|-----------|-------|-----------|----------|
+| **Directories** | Blue | `\u{001B}[0;34m` | Folders and directory paths |
+| **Symbolic Links** | Yellow | `\u{001B}[0;33m` | Links pointing to other files/dirs |
+| **Executables** | Red | `\u{001B}[0;31m` | Files with executable permissions |
+| **Regular Files** | White | `\u{001B}[0;37m` | All other files |
+
+Source: `Sources/SwiftListCore/Utilities/TerminalColors.swift:14-28`
+
+<Note>
+  Colors are rendered using ANSI escape codes and will appear correctly in most modern terminals. The reset code `\u{001B}[0;0m` is automatically appended after each file name to restore default colors.
+</Note>
+
+### Color Examples
+
+<CodeGroup>
+```bash Basic colors
+$ sls --color
+# Output shows:
+# Documents    (blue - directory)
+# README.md    (white - regular file)
+# build.sh     (red - executable)
+# config-link  (yellow - symbolic link)
+```
+
+```bash With long format
+$ sls -l --color
+493 user staff 3  96 bytes 2026-03-01 09:15 Documents
+493 user staff 1  2.3 KB 2026-03-01 10:30 README.md
+493 user staff 1  512 bytes 2026-02-28 14:20 build.sh
+493 user staff 1  64 bytes 2026-02-27 11:45 config-link -> /etc/config
+```
+</CodeGroup>
+
+## Icon System
+
+Enable icons with the `--icons` flag:
+
+```bash
+$ sls --icons
+```
+
+### Icon Mappings
+
+List uses emoji icons to represent file types:
+
+| File Type | Icon | Description |
+|-----------|------|-------------|
+| **Directories** | 📁 | Folders containing other files |
+| **Regular Files** | 📄 | Standard files (text, data, etc.) |
+| **Symbolic Links** | 🔗 | Links pointing to other files/directories |
+| **Executables** | ⚙️ | Files with executable permissions |
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:40-58`
+
+### Icon Examples
+
+<CodeGroup>
+```bash Basic icons
+$ sls --icons
+📁 Documents  📄 README.md  ⚙️ build.sh  🔗 config-link
+```
+
+```bash With long format
+$ sls -l --icons
+📁 493 user staff 3  96 bytes 2026-03-01 09:15 Documents
+📄 493 user staff 1  2.3 KB 2026-03-01 10:30 README.md
+⚙️ 493 user staff 1  512 bytes 2026-02-28 14:20 build.sh
+🔗 493 user staff 1  64 bytes 2026-02-27 11:45 config-link -> /etc/config
+```
+
+```bash One per line
+$ sls -1 --icons
+📁 Documents
+📄 README.md
+⚙️ build.sh
+🔗 config-link
+```
+</CodeGroup>
+
+## Combining Colors and Icons
+
+For maximum visual clarity, use both colors and icons together:
+
+```bash
+$ sls --color --icons
+```
+
+This provides both color coding and icon prefixes:
+
+```bash
+📁 Documents       # Blue text with folder icon
+📄 README.md       # White text with file icon
+⚙️ build.sh        # Red text with executable icon
+🔗 config-link     # Yellow text with link icon
+```
+
+### Combined with Long Format
+
+```bash
+$ sls -l --color --icons
+```
+
+Provides the most detailed and visually rich output:
+
+```bash
+📁 493 user staff 3  96 bytes   2026-03-01 09:15 Documents
+📄 493 user staff 1  2.3 KB     2026-03-01 10:30 README.md
+⚙️ 493 user staff 1  512 bytes  2026-02-28 14:20 build.sh
+🔗 493 user staff 1  64 bytes   2026-02-27 11:45 config-link -> /etc/config
+```
+
+## File Type Detection
+
+List determines file types using the following logic (in order):
+
+1. **Directories**: Detected via `URL.hasDirectoryPath`
+   - Icon: 📁
+   - Color: Blue
+
+2. **Symbolic Links**: Detected via file attribute `.type == .typeSymbolicLink`
+   - Icon: 🔗
+   - Color: Yellow
+   - Shows destination path with ` -> ` separator
+
+3. **Executables**: Detected via `FileManager.isExecutableFile(atPath:)`
+   - Icon: ⚙️
+   - Color: Red
+   - Must have executable permissions
+
+4. **Regular Files**: Everything else
+   - Icon: 📄
+   - Color: White
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:37-59`
+
+<Note>
+  Symbolic links are checked **before** executables. This means a symbolic link to an executable file will be displayed as a link (🔗, yellow) rather than an executable (⚙️, red).
+</Note>
+
+## Programmatic Usage
+
+When using List as a Swift library:
+
+```swift
+import SwiftListCore
+
+// Enable colors only
+let options = DisplayOptions(
+    color: true
+)
+
+// Enable icons only
+let options = DisplayOptions(
+    icons: true
+)
+
+// Enable both
+let options = DisplayOptions(
+    color: true,
+    icons: true,
+    long: true
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+```
+
+### Direct File Type Detection
+
+You can also use the file type detection directly:
+
+```swift
+import SwiftListCore
+import Foundation
+
+let url = URL(fileURLWithPath: "/path/to/file")
+let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+
+let representation = FileManagerHelper.determineType(
+    of: url,
+    attributes: attributes
+)
+
+print("Icon: \(representation.icon)")
+print("Color: \(representation.color)")
+if let dest = representation.destination {
+    print("Link destination: \(dest)")
+}
+```
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:32-59`
+
+## Symbolic Link Handling
+
+Symbolic links receive special treatment:
+
+- The link itself is displayed (not the target)
+- The destination path is shown after ` -> `
+- The link's icon and color are used (not the target's)
+
+```bash
+$ sls -l --color --icons
+🔗 493 user staff 1  64 bytes 2026-02-27 11:45 config-link -> /etc/config
+```
+
+Even if the target is a directory or executable, the link displays as a link.
+
+Source: `Sources/SwiftListCore/Utilities/FileManagerHelper.swift:45-51`
+
+## Terminal Compatibility
+
+<Note>
+  **Color Support**: Colors work in any terminal that supports ANSI escape codes. This includes:
+  - macOS Terminal.app
+  - iTerm2
+  - Most Linux terminals (GNOME Terminal, Konsole, etc.)
+  - Windows Terminal
+  - VS Code integrated terminal
+</Note>
+
+<Note>
+  **Icon Support**: Icons require a terminal with Unicode/emoji support and a font that includes emoji glyphs. Most modern terminals support this by default.
+</Note>
+
+## Tips
+
+<Tip>
+  Use `--color` and `--icons` together with `-l` for the most informative output:
+  
+  ```bash
+  sls -l --color --icons
+  ```
+</Tip>
+
+<Tip>
+  If you frequently want colors and icons, consider creating a shell alias:
+  
+  ```bash
+  alias sls='sls --color --icons'
+  ```
+</Tip>
+
+<Tip>
+  Combine visual options with sorting to organize files by importance:
+  
+  ```bash
+  sls -lS --color --icons  # Largest files first
+  sls -lt --color --icons  # Most recent first
+  ```
+</Tip>
+
+## Related
+
+- [Display Options](/configuration/display-options) - All configuration options
+- [Sorting](/configuration/sorting) - Control file ordering

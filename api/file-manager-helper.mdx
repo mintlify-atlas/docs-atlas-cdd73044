@@ -1,0 +1,458 @@
+---
+title: FileManagerHelper
+description: Main API for file system operations and directory listing
+---
+
+The `FileManagerHelper` class provides utilities for retrieving, formatting, and displaying file system information with support for colors, icons, sorting, and recursive traversal.
+
+## Type Definition
+
+```swift
+public class FileManagerHelper
+```
+
+Defined in: `SwiftListCore/Utilities/FileManagerHelper.swift`
+
+## Properties
+
+<ParamField path="fileManager" type="FileManager" readonly>
+  The shared `FileManager` instance used for file operations. This is a static property that returns a new `FileManager` instance.
+  
+  ```swift
+  public static var fileManager: FileManager
+  ```
+</ParamField>
+
+## Methods
+
+### contents(with:currentDepth:)
+
+Retrieves and formats the contents of a directory according to the specified display options.
+
+```swift
+public static func contents(
+    with options: DisplayOptions,
+    currentDepth: Int = 0
+) throws -> String
+```
+
+<ParamField path="options" type="DisplayOptions" required>
+  The display options controlling how files are listed and formatted.
+</ParamField>
+
+<ParamField path="currentDepth" type="Int" default="0">
+  The current recursion depth. `0` represents the initial directory. This parameter is used internally during recursive traversal.
+</ParamField>
+
+<ResponseField name="returns" type="String">
+  A formatted string listing the directory contents according to the display options.
+</ResponseField>
+
+<ResponseField name="throws" type="Error">
+  Throws an error if the directory contents cannot be retrieved (e.g., permission denied, directory not found).
+</ResponseField>
+
+#### Behavior
+
+- If `options.location` is `nil`, lists the current working directory
+- If `options.directoryOnly` is `true`, returns information about the directory itself rather than its contents
+- Respects `options.all` to show/hide hidden files
+- Sorts contents according to `options.sortBy`
+- Applies word wrapping based on terminal width when not using long or one-line format
+- Recursively lists subdirectories when `options.recurse` is `true`
+- Respects `options.depthLimit` when recursing
+
+#### Example
+
+```swift
+import SwiftListCore
+
+let options = DisplayOptions(
+    all: true,
+    long: true,
+    color: true,
+    icons: true,
+    sortBy: .time
+)
+
+do {
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+} catch {
+    print("Error: \(error.localizedDescription)")
+}
+```
+
+### fileAttributes(at:with:)
+
+Retrieves and formats file attributes for display.
+
+```swift
+public static func fileAttributes(
+    at location: URL,
+    with options: DisplayOptions
+) throws -> String
+```
+
+<ParamField path="location" type="URL" required>
+  The file URL to retrieve attributes for.
+</ParamField>
+
+<ParamField path="options" type="DisplayOptions" required>
+  The display options controlling which attributes to show and how to format them.
+</ParamField>
+
+<ResponseField name="returns" type="String">
+  A formatted string containing the file's attributes and name.
+</ResponseField>
+
+<ResponseField name="throws" type="Error">
+  Throws an error if file attributes cannot be retrieved.
+</ResponseField>
+
+#### Formatted Output
+
+The returned string includes (depending on options):
+
+- File type icon (if `options.icons` is `true`)
+- POSIX permissions (if `options.long` is `true`)
+- Owner name (if `options.long` is `true`)
+- Group name (if `options.long` is `true`)
+- Link count (if `options.long` is `true`)
+- File size (if `options.long` is `true`)
+  - Human-readable format if `options.humanReadable` is `true`
+  - Raw bytes otherwise
+- Modification date in `yyyy-MM-dd HH:mm` format (if `options.long` is `true`)
+- ANSI color code (if `options.color` is `true`)
+- File name
+- Type indicator (if `options.classify` is `true`)
+  - `/` for directories
+  - `*` for executables
+- Symbolic link destination (if applicable)
+- Color reset code (if `options.color` is `true`)
+- Newline or spacing based on `options.oneLine` and `options.long`
+
+#### Example
+
+```swift
+import Foundation
+import SwiftListCore
+
+let fileURL = URL(fileURLWithPath: "/path/to/file.txt")
+let options = DisplayOptions(
+    long: true,
+    humanReadable: true,
+    icons: true,
+    color: true
+)
+
+do {
+    let attributes = try FileManagerHelper.fileAttributes(
+        at: fileURL,
+        with: options
+    )
+    print(attributes)
+    // Output: 📄 644 user staff 1 1.5 KB 2026-03-01 10:30 file.txt
+} catch {
+    print("Error: \(error.localizedDescription)")
+}
+```
+
+### determineType(of:attributes:)
+
+Determines the type of a file and returns its visual representation.
+
+```swift
+public static func determineType(
+    of location: URL,
+    attributes: [FileAttributeKey: Any]
+) -> FileRepresentation
+```
+
+<ParamField path="location" type="URL" required>
+  The file URL to determine the type of.
+</ParamField>
+
+<ParamField path="attributes" type="[FileAttributeKey: Any]" required>
+  The file attributes dictionary obtained from `FileManager.attributesOfItem(atPath:)`.
+</ParamField>
+
+<ResponseField name="returns" type="FileRepresentation">
+  A `FileRepresentation` object containing the appropriate icon, color, and destination for the file type.
+</ResponseField>
+
+#### File Type Detection
+
+The method determines file types in the following order:
+
+1. **Directory** (`hasDirectoryPath`)
+   - Icon: 📁
+   - Color: Blue
+
+2. **Symbolic Link** (file type is `.typeSymbolicLink`)
+   - Icon: 🔗
+   - Color: Yellow
+   - Destination: The target path of the symlink
+
+3. **Executable** (`isExecutableFile`)
+   - Icon: ⚙️
+   - Color: Red
+
+4. **Regular File** (default)
+   - Icon: 📄
+   - Color: White
+
+#### Example
+
+```swift
+import Foundation
+import SwiftListCore
+
+let fileURL = URL(fileURLWithPath: "/usr/bin/swift")
+let attributes = try FileManager.default.attributesOfItem(
+    atPath: fileURL.path
+)
+
+let representation = FileManagerHelper.determineType(
+    of: fileURL,
+    attributes: attributes
+)
+
+print("Icon: \(representation.icon)")    // ⚙️
+print("Color: \(representation.color)")  // Red ANSI code
+print("Is symlink: \(representation.destination != nil)")
+```
+
+## Usage Examples
+
+### Basic Directory Listing
+
+```swift
+import SwiftListCore
+
+// Simple listing of current directory
+let options = DisplayOptions()
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+```
+
+### Detailed Listing with All Options
+
+```swift
+import Foundation
+import SwiftListCore
+
+// Full-featured listing
+let options = DisplayOptions(
+    location: URL(fileURLWithPath: "/usr/local"),
+    all: true,
+    long: true,
+    color: true,
+    icons: true,
+    humanReadable: true,
+    classify: true,
+    sortBy: .size
+)
+
+do {
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+} catch let error as NSError {
+    if error.code == CocoaError.fileReadNoPermission.rawValue {
+        print("Permission denied")
+    } else {
+        print("Error: \(error.localizedDescription)")
+    }
+}
+```
+
+### Recursive Listing
+
+```swift
+import SwiftListCore
+
+// Recursively list directories with depth limit
+let options = DisplayOptions(
+    recurse: true,
+    depthLimit: 2,
+    icons: true,
+    oneLine: true
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+```
+
+### Custom File Browser
+
+```swift
+import Foundation
+import SwiftListCore
+
+func browseDirectory(_ path: String, showHidden: Bool = false) {
+    let url = URL(fileURLWithPath: path)
+    let options = DisplayOptions(
+        location: url,
+        all: showHidden,
+        long: true,
+        color: true,
+        icons: true,
+        humanReadable: true,
+        sortBy: .name
+    )
+    
+    do {
+        print("Contents of \(path):")
+        print("---")
+        let listing = try FileManagerHelper.contents(with: options)
+        print(listing)
+    } catch {
+        print("Error browsing directory: \(error.localizedDescription)")
+    }
+}
+
+// Use the browser
+browseDirectory("/Users/Shared", showHidden: true)
+```
+
+### File Type Analysis
+
+```swift
+import Foundation
+import SwiftListCore
+
+func analyzeDirectory(_ path: String) throws {
+    let url = URL(fileURLWithPath: path)
+    let contents = try FileManager.default.contentsOfDirectory(
+        at: url,
+        includingPropertiesForKeys: [.isDirectoryKey],
+        options: []
+    )
+    
+    var stats = [String: Int]()
+    
+    for fileURL in contents {
+        let attributes = try FileManager.default.attributesOfItem(
+            atPath: fileURL.path
+        )
+        let representation = FileManagerHelper.determineType(
+            of: fileURL,
+            attributes: attributes
+        )
+        
+        let type: String
+        if representation.destination != nil {
+            type = "Symlink"
+        } else if fileURL.hasDirectoryPath {
+            type = "Directory"
+        } else if representation.color == TerminalColors.red.rawValue {
+            type = "Executable"
+        } else {
+            type = "File"
+        }
+        
+        stats[type, default: 0] += 1
+    }
+    
+    print("Analysis of \(path):")
+    for (type, count) in stats.sorted(by: { $0.key < $1.key }) {
+        print("  \(type): \(count)")
+    }
+}
+
+try analyzeDirectory("/usr/local/bin")
+// Output:
+//   Analysis of /usr/local/bin:
+//     Directory: 2
+//     Executable: 45
+//     Symlink: 12
+```
+
+### Sorting Examples
+
+```swift
+import SwiftListCore
+
+// Sort by modification time (most recent first)
+let timeOptions = DisplayOptions(
+    long: true,
+    sortBy: .time
+)
+let byTime = try FileManagerHelper.contents(with: timeOptions)
+print("By time:\n\(byTime)")
+
+// Sort by size (largest first)
+let sizeOptions = DisplayOptions(
+    long: true,
+    humanReadable: true,
+    sortBy: .size
+)
+let bySize = try FileManagerHelper.contents(with: sizeOptions)
+print("\nBy size:\n\(bySize)")
+
+// Sort alphabetically (default)
+let nameOptions = DisplayOptions(
+    long: true,
+    sortBy: .name
+)
+let byName = try FileManagerHelper.contents(with: nameOptions)
+print("\nBy name:\n\(byName)")
+```
+
+### Get Individual File Information
+
+```swift
+import Foundation
+import SwiftListCore
+
+func getFileInfo(_ path: String) throws -> String {
+    let url = URL(fileURLWithPath: path)
+    let options = DisplayOptions(
+        long: true,
+        color: true,
+        icons: true,
+        humanReadable: true
+    )
+    
+    return try FileManagerHelper.fileAttributes(at: url, with: options)
+}
+
+// Get info for a single file
+let info = try getFileInfo("/etc/hosts")
+print(info)
+// Output: 📄 644 root wheel 1 298 bytes 2026-01-15 09:23 hosts
+```
+
+## Error Handling
+
+Both `contents()` and `fileAttributes()` can throw errors. Common error scenarios:
+
+```swift
+import Foundation
+import SwiftListCore
+
+let options = DisplayOptions(location: URL(fileURLWithPath: "/restricted"))
+
+do {
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+} catch let error as NSError {
+    switch error.code {
+    case CocoaError.fileReadNoPermission.rawValue:
+        print("Permission denied: Cannot read directory")
+    case CocoaError.fileNoSuchFile.rawValue:
+        print("Directory does not exist")
+    case CocoaError.fileReadUnknown.rawValue:
+        print("Unknown error reading directory")
+    default:
+        print("Error: \(error.localizedDescription)")
+    }
+}
+```
+
+## Related
+
+- [DisplayOptions](/api/display-options) - Configure file listing display
+- [FileRepresentation](/api/file-representation) - Returned by determineType()
+- [SortOption](/api/sort-option) - Sorting options for listings
+- [TerminalColors](/api/terminal-colors) - Colors used in output

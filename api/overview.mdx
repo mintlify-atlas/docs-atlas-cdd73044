@@ -1,0 +1,150 @@
+---
+title: Library API Overview
+description: Use List as a Swift library in your own projects
+---
+
+List provides reusable Swift modules that you can integrate into your own applications. This allows you to leverage List's file listing and formatting capabilities programmatically.
+
+## Available Modules
+
+List provides two library modules:
+
+### SwiftListCore
+
+The core file system operations module containing:
+- **DisplayOptions**: Configuration for file listing display
+- **FileManagerHelper**: Main API for retrieving and formatting directory contents
+- **FileRepresentation**: Visual representation of files with icons and colors
+- **SortOption**: Enumeration for sorting options
+- **TerminalColors**: ANSI color codes for terminal output
+
+This module contains all the core logic for file system operations and is ideal for building custom file listing tools.
+
+### SwiftListCLI
+
+The command-line interface module that builds on SwiftListCore. This module provides the CLI argument parsing and command structure. Most library users will only need SwiftListCore.
+
+## Installation
+
+Add List as a dependency in your `Package.swift`:
+
+```swift
+let package = Package(
+    name: "YourProject",
+    platforms: [.macOS(.v13)],
+    dependencies: [
+        .package(url: "https://github.com/yourusername/sls", from: "1.0.0")
+    ],
+    targets: [
+        .target(
+            name: "YourTarget",
+            dependencies: [
+                .product(name: "SwiftListCore", package: "sls")
+            ]
+        )
+    ]
+)
+```
+
+## Basic Usage
+
+Here's a simple example of using SwiftListCore to list directory contents:
+
+```swift
+import Foundation
+import SwiftListCore
+
+// Create display options
+let options = DisplayOptions(
+    all: true,           // Show hidden files
+    long: true,          // Long format with details
+    color: true,         // Colorize output
+    icons: true,         // Show file type icons
+    humanReadable: true, // Human-readable file sizes
+    sortBy: .time        // Sort by modification time
+)
+
+// Get directory contents
+do {
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+} catch {
+    print("Error listing directory: \(error)")
+}
+```
+
+## Listing a Specific Directory
+
+```swift
+import Foundation
+import SwiftListCore
+
+// Specify a location to list
+let homeDir = FileManager.default.homeDirectoryForCurrentUser
+let options = DisplayOptions(
+    location: homeDir,
+    all: false,
+    long: true,
+    icons: true,
+    sortBy: .name
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+```
+
+## Recursive Directory Listing
+
+```swift
+import Foundation
+import SwiftListCore
+
+// List directory recursively with depth limit
+let options = DisplayOptions(
+    recurse: true,
+    depthLimit: 2,  // Only recurse 2 levels deep
+    icons: true,
+    sortBy: .name
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+```
+
+## API Documentation
+
+Explore the detailed API documentation for each component:
+
+- [DisplayOptions](/api/display-options) - Configure file listing display
+- [FileManagerHelper](/api/file-manager-helper) - Main API for directory operations
+- [FileRepresentation](/api/file-representation) - File visual representation
+- [SortOption](/api/sort-option) - Sorting options enumeration
+- [TerminalColors](/api/terminal-colors) - ANSI color codes for terminal output
+
+## Error Handling
+
+The `FileManagerHelper.contents()` and `FileManagerHelper.fileAttributes()` methods can throw errors when accessing the file system. Always wrap calls in `do-catch` blocks:
+
+```swift
+do {
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+} catch let error as NSError {
+    if error.domain == NSCocoaErrorDomain {
+        switch error.code {
+        case CocoaError.fileReadNoPermission.rawValue:
+            print("Permission denied")
+        case CocoaError.fileNoSuchFile.rawValue:
+            print("Directory not found")
+        default:
+            print("Error: \(error.localizedDescription)")
+        }
+    }
+}
+```
+
+## Next Steps
+
+- Learn about [DisplayOptions](/api/display-options) configuration
+- Explore [FileManagerHelper](/api/file-manager-helper) methods
+- Understand [file type determination](/api/file-representation)

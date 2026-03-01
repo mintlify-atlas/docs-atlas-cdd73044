@@ -1,0 +1,83 @@
+---
+title: Introduction to List (sls)
+description: A modern replacement for the UNIX ls command with enhanced features, built with Swift
+---
+
+# Introduction to List (sls)
+
+List (sls) is a modern replacement for the traditional UNIX `ls` command, providing an enhanced file listing experience with color-coded output, visual file type icons, human-readable sizes, and flexible sorting options.
+
+Built with Swift, List combines speed and simplicity to help you navigate your file system more effectively.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Color-coded output" icon="palette">
+    Syntax highlighting distinguishes files, directories, executables, and symbolic links at a glance
+  </Card>
+  
+  <Card title="File type icons" icon="icons">
+    Visual emoji indicators help you quickly identify file types in your listings
+  </Card>
+  
+  <Card title="Flexible sorting" icon="arrow-down-wide-short">
+    Sort by name, size, or modification time to find what you need faster
+  </Card>
+  
+  <Card title="Recursive listing" icon="folder-tree">
+    Explore directory structures with recursive listing and configurable depth limits
+  </Card>
+  
+  <Card title="Human-readable sizes" icon="binary">
+    File sizes displayed in KB, MB, GB instead of raw bytes for easy comprehension
+  </Card>
+  
+  <Card title="Cross-platform" icon="computer">
+    Works seamlessly on macOS and Linux systems with Swift runtime
+  </Card>
+</CardGroup>
+
+## Why List?
+
+While the traditional `ls` command has served Unix users for decades, List brings modern enhancements that make working with files more intuitive:
+
+- **Visual clarity**: Color-coded output and icons make it easier to distinguish between file types without reading file extensions
+- **Better formatting**: Human-readable file sizes and flexible display options adapt to your workflow
+- **Modern architecture**: Built with Swift's type safety and performance characteristics
+- **Extensible design**: Clean modular architecture with SwiftListCore and SwiftListCLI libraries
+
+## What's different from ls?
+
+List offers several improvements over the standard `ls` command:
+
+| Feature | Traditional ls | List (sls) |
+|---------|---------------|------------|
+| Color output | Requires --color flag | Built-in with --color flag |
+| File icons | Not available | Emoji icons with --icons flag |
+| Sorting options | Limited flags | Clean --sort-time and --sort-size flags |
+| Recursive listing | -R flag | --recurse with depth limit support |
+| File classification | -F flag | --classify flag with type indicators |
+
+## Get started
+
+Ready to try List? Follow these guides to get up and running:
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Learn how to install List from source or download pre-built binaries
+  </Card>
+  
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get your first listing command running in minutes
+  </Card>
+</CardGroup>
+
+## Architecture
+
+List is built as a modular Swift command-line tool with three main components:
+
+- **sls**: The executable command-line tool
+- **SwiftListCLI**: Command-line interface and argument parsing using Swift Argument Parser
+- **SwiftListCore**: Core file system operations, display options, and formatting logic
+
+This separation allows you to integrate List's functionality into your own Swift projects as a library.

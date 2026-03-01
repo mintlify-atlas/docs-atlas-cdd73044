@@ -1,0 +1,149 @@
+---
+title: Installation
+description: Install List (sls) on your system by building from source or downloading pre-built binaries
+---
+
+# Installation
+
+List (sls) can be installed on macOS and Linux systems that support Swift. Choose the installation method that works best for you.
+
+## Prerequisites
+
+Before installing List, ensure your system meets these requirements:
+
+- **Swift**: Version 6.2 or later
+- **Platform**: macOS 13.0 (Ventura) or later, or a compatible Linux distribution
+- **Git**: Required if building from source
+
+<Note>
+  List uses Swift 6.2 features and requires macOS 13.0 as the minimum deployment target.
+</Note>
+
+## Installation methods
+
+<Steps>
+  <Step title="Choose your installation method">
+    You can either build List from source for the latest version, or download a pre-built binary for convenience.
+    
+    Building from source is recommended if you want the latest features or need to customize the build.
+  </Step>
+  
+  <Step title="Install Swift (if needed)">
+    Verify that Swift is installed on your system:
+    
+    ```bash
+    swift --version
+    ```
+    
+    You should see Swift version 6.2 or later. If Swift is not installed:
+    
+    **macOS**: Install Xcode from the Mac App Store, or install the Command Line Tools:
+    ```bash
+    xcode-select --install
+    ```
+    
+    **Linux**: Download Swift from [swift.org](https://swift.org/download/) and follow the installation instructions for your distribution.
+  </Step>
+  
+  <Step title="Build from source">
+    Clone the List repository and build the executable:
+    
+    ```bash
+    git clone https://github.com/mac9sb/list.git
+    cd list
+    swift build -c release
+    ```
+    
+    The build process compiles List with optimizations enabled. The executable will be created at `.build/release/sls`.
+    
+    <Note>
+      The `-c release` flag builds an optimized production binary. This provides better performance than a debug build.
+    </Note>
+  </Step>
+  
+  <Step title="Install the binary">
+    Copy the compiled executable to a directory in your PATH:
+    
+    ```bash
+    cp .build/release/sls /usr/local/bin/
+    ```
+    
+    This makes the `sls` command available system-wide. You may need to use `sudo` depending on your permissions:
+    
+    ```bash
+    sudo cp .build/release/sls /usr/local/bin/
+    ```
+    
+    <Warning>
+      Ensure `/usr/local/bin` is in your PATH. You can verify this by running `echo $PATH`.
+    </Warning>
+  </Step>
+  
+  <Step title="Verify installation">
+    Confirm that List is installed correctly:
+    
+    ```bash
+    sls --version
+    ```
+    
+    You should see the version number (1.5.0 or later) displayed.
+  </Step>
+</Steps>
+
+## Alternative: Download pre-built binary
+
+If you prefer not to build from source, you can download a pre-built binary:
+
+1. Visit the [releases page](https://github.com/mac9sb/list/releases)
+2. Download the latest binary for your platform
+3. Extract the archive and copy `sls` to `/usr/local/bin/`
+4. Make the binary executable:
+
+```bash
+chmod +x /usr/local/bin/sls
+```
+
+## Custom installation location
+
+If you want to install List to a custom location instead of `/usr/local/bin/`, you can:
+
+<CodeGroup>
+```bash Custom directory
+# Copy to a custom location
+cp .build/release/sls ~/bin/sls
+
+# Add to your PATH in ~/.bashrc or ~/.zshrc
+export PATH="$HOME/bin:$PATH"
+```
+
+```bash User local directory
+# Install to ~/.local/bin (common on Linux)
+mkdir -p ~/.local/bin
+cp .build/release/sls ~/.local/bin/
+
+# Add to PATH if not already included
+export PATH="$HOME/.local/bin:$PATH"
+```
+</CodeGroup>
+
+After modifying your shell configuration, reload it:
+
+```bash
+source ~/.bashrc  # or ~/.zshrc
+```
+
+## Uninstalling
+
+To remove List from your system, simply delete the executable:
+
+```bash
+sudo rm /usr/local/bin/sls
+```
+
+## Next steps
+
+Now that you have List installed, learn how to use it:
+
+<Card title="Quickstart guide" icon="rocket" href="/quickstart">
+  Get started with your first List commands and explore common usage patterns
+</Card>

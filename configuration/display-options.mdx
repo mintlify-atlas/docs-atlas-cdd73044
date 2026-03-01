@@ -1,0 +1,318 @@
+---
+title: Display Options
+description: Configure how List displays files and directories
+---
+
+The `DisplayOptions` struct controls how files are displayed, sorted, and formatted when listing directory contents. This page covers all available configuration options and how they affect the output.
+
+## Overview
+
+DisplayOptions is the primary configuration interface for List. It provides fine-grained control over:
+
+- What files to show (hidden files, directory-only)
+- How to format output (long format, human-readable sizes)
+- Visual styling (colors, icons, classification)
+- Sorting and organization
+- Recursive behavior
+
+Source: `Sources/SwiftListCore/Configuration/DisplayOptions.swift`
+
+## Core Display Options
+
+### `all: Bool`
+
+Whether to show hidden files (files starting with `.`).
+
+<Tabs>
+  <Tab title="Default (all: false)">
+    ```bash
+    $ sls
+    Documents  Downloads  Pictures  Videos
+    ```
+  </Tab>
+  <Tab title="With -a flag (all: true)">
+    ```bash
+    $ sls -a
+    .bash_profile  .config  .gitconfig  Documents  Downloads  Pictures  Videos
+    ```
+  </Tab>
+</Tabs>
+
+**Default:** `false`
+
+**CLI Flag:** `-a, --all`
+
+### `long: Bool`
+
+Whether to use long listing format, showing detailed file information including permissions, owner, group, reference count, size, and modification date.
+
+<Tabs>
+  <Tab title="Default">
+    ```bash
+    $ sls
+    README.md  package.json  src  tests
+    ```
+  </Tab>
+  <Tab title="Long format (-l)">
+    ```bash
+    $ sls -l
+    493 user staff 1  2.3 KB 2026-03-01 10:30 README.md
+    493 user staff 1  1.5 KB 2026-03-01 09:15 package.json
+    493 user staff 3  96 bytes 2026-02-28 14:20 src
+    493 user staff 2  64 bytes 2026-02-27 11:45 tests
+    ```
+  </Tab>
+</Tabs>
+
+**Default:** `false`
+
+**CLI Flag:** `-l, --long`
+
+**Format:** `permissions owner group refCount size modificationDate filename`
+
+### `oneLine: Bool`
+
+Whether to display one file per line. By default, List displays files in a wrapped, multi-column format to fit the terminal width.
+
+<Tabs>
+  <Tab title="Default (wrapped)">
+    ```bash
+    $ sls
+    file1.txt  file2.txt  file3.txt  file4.txt  file5.txt  file6.txt
+    file7.txt  file8.txt  file9.txt
+    ```
+  </Tab>
+  <Tab title="One per line (-1)">
+    ```bash
+    $ sls -1
+    file1.txt
+    file2.txt
+    file3.txt
+    file4.txt
+    file5.txt
+    file6.txt
+    file7.txt
+    file8.txt
+    file9.txt
+    ```
+  </Tab>
+</Tabs>
+
+**Default:** `false`
+
+**CLI Flag:** `-1, --one-line`
+
+### `humanReadable: Bool`
+
+Whether to show human-readable file sizes (KB, MB, GB) instead of bytes. Only applies when used with `long` format.
+
+<Tabs>
+  <Tab title="Bytes (default)">
+    ```bash
+    $ sls -l
+    493 user staff 1  2,345 bytes 2026-03-01 10:30 README.md
+    493 user staff 1  1,523 bytes 2026-03-01 09:15 package.json
+    ```
+  </Tab>
+  <Tab title="Human-readable (-h)">
+    ```bash
+    $ sls -lh
+    493 user staff 1  2.3 KB 2026-03-01 10:30 README.md
+    493 user staff 1  1.5 KB 2026-03-01 09:15 package.json
+    ```
+  </Tab>
+</Tabs>
+
+**Default:** `false`
+
+**CLI Flag:** `-h, --human-readable`
+
+<Note>
+  The `-h` flag only affects output when combined with `-l` (long format).
+</Note>
+
+## Filtering Options
+
+### `directoryOnly: Bool`
+
+Whether to list directories themselves rather than their contents. Useful when you want to see information about a directory rather than what's inside it.
+
+<Tabs>
+  <Tab title="Default (show contents)">
+    ```bash
+    $ sls src
+    components  utils  index.ts  types.ts
+    ```
+  </Tab>
+  <Tab title="Directory only (-d)">
+    ```bash
+    $ sls -d src
+    src
+    ```
+  </Tab>
+</Tabs>
+
+**Default:** `false`
+
+**CLI Flag:** `-d, --directory-only`
+
+## Visual Enhancement Options
+
+### `color: Bool`
+
+Whether to colorize output based on file type. See [Color and Icons](/configuration/color-and-icons) for details on the color scheme.
+
+**Default:** `false`
+
+**CLI Flag:** `--color`
+
+**Colors:**
+- Blue: directories
+- Yellow: symbolic links
+- Red: executables
+- White: regular files
+
+### `icons: Bool`
+
+Whether to show emoji icons representing file types. See [Color and Icons](/configuration/color-and-icons) for the complete icon set.
+
+**Default:** `false`
+
+**CLI Flag:** `--icons`
+
+**Icons:**
+- 📁 directories
+- 📄 files
+- 🔗 symbolic links
+- ⚙️ executables
+
+### `classify: Bool`
+
+Whether to append type indicators to file names:
+- `/` for directories
+- `*` for executables
+
+```bash
+$ sls --classify
+Documents/  README.md  build.sh*  src/
+```
+
+**Default:** `false`
+
+**CLI Flag:** `-F, --classify`
+
+## Recursive Options
+
+### `recurse: Bool`
+
+Whether to recurse into subdirectories and display their contents.
+
+```bash
+$ sls -R
+file1.txt  src
+
+src:
+index.ts  utils
+
+src/utils:
+helpers.ts  types.ts
+```
+
+**Default:** `false`
+
+**CLI Flag:** `-R, --recursive`
+
+### `depthLimit: Int?`
+
+Maximum recursion depth when using `recurse`. `nil` means unlimited depth.
+
+```bash
+$ sls -R --depth 1
+file1.txt  src
+
+src:
+index.ts  utils
+```
+
+**Default:** `nil` (unlimited)
+
+**CLI Flag:** `--depth <number>`
+
+<Note>
+  The `depthLimit` option only applies when `recurse` is enabled.
+</Note>
+
+## Sorting Options
+
+### `sortBy: SortOption`
+
+How to sort the file listing. See [Sorting](/configuration/sorting) for detailed information.
+
+**Default:** `.name`
+
+**Options:**
+- `.name` - Sort alphabetically by filename (default)
+- `.time` - Sort by modification time, most recent first
+- `.size` - Sort by file size, largest first
+
+**CLI Flags:**
+- Default or no flag: sort by name
+- `-t`: sort by time
+- `-S`: sort by size
+
+## Programmatic Usage
+
+When using List as a Swift library, create a `DisplayOptions` instance:
+
+```swift
+import SwiftListCore
+
+// Basic usage
+let options = DisplayOptions(
+    all: true,
+    long: true,
+    sortBy: .time
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+```
+
+```swift
+// Advanced configuration
+let options = DisplayOptions(
+    location: URL(fileURLWithPath: "/path/to/directory"),
+    all: true,
+    long: true,
+    recurse: true,
+    color: true,
+    icons: true,
+    humanReadable: true,
+    classify: true,
+    sortBy: .size,
+    depthLimit: 2
+)
+```
+
+## Combining Options
+
+Options can be combined to create powerful listing commands:
+
+```bash
+# Long format with human-readable sizes, colors, and icons
+$ sls -lh --color --icons
+
+# Show all files, recursively, sorted by modification time
+$ sls -aRt
+
+# One per line with classification indicators
+$ sls -1F
+
+# Long format for a specific directory, sorted by size
+$ sls -lS /path/to/dir
+```
+
+## Related
+
+- [Sorting](/configuration/sorting) - Detailed information on sort options
+- [Color and Icons](/configuration/color-and-icons) - Visual indicator reference

@@ -1,0 +1,76 @@
+---
+title: Command Overview
+description: Introduction to the sls command structure and syntax
+---
+
+## What is sls?
+
+`sls` (Swift List) is a modern CLI tool that serves as a drop-in replacement for the traditional `ls` command. Built with Swift, it provides enhanced functionality for listing directory contents with improved formatting, icons, colors, and flexible sorting options.
+
+## Command Syntax
+
+```bash
+sls [paths...] [options]
+```
+
+### Components
+
+- **paths** - Optional. One or more paths to list. Defaults to current directory if omitted.
+- **options** - Flags and options that control output format, filtering, and sorting.
+
+## How sls Differs from ls
+
+While maintaining compatibility with common `ls` patterns, `sls` offers:
+
+- **Modern output formatting** - Clean, readable display with optional icons and colors
+- **Simplified flags** - Intuitive short and long forms for all options
+- **Type safety** - Built with Swift for robust error handling
+- **Flexible sorting** - Sort by name (default), time, or size
+- **Depth-controlled recursion** - Limit how deep recursive listings go
+- **Human-readable sizes** - Easy-to-read file size formatting
+
+## Quick Examples
+
+```bash
+# List current directory
+sls
+
+# List with icons and colors
+sls --icons --color
+
+# Long format with human-readable sizes
+sls -l --human-readable
+
+# Recursive listing with depth limit
+sls -r -L 2
+```
+
+## Learn More
+
+Explore the complete command reference:
+
+<CardGroup cols={3}>
+  <Card title="Basic Usage" icon="terminal" href="/commands/basic-usage">
+    Core usage patterns and common workflows
+  </Card>
+  <Card title="Options Reference" icon="sliders" href="/commands/options">
+    Complete list of all flags and options
+  </Card>
+  <Card title="Examples" icon="code" href="/commands/examples">
+    Real-world examples and use cases
+  </Card>
+</CardGroup>
+
+## Getting Help
+
+Display built-in help at any time:
+
+```bash
+sls --help
+```
+
+Check the installed version:
+
+```bash
+sls --version
+```

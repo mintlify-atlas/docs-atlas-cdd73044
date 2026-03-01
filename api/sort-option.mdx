@@ -1,0 +1,286 @@
+---
+title: SortOption
+description: Options for sorting file listings
+---
+
+The `SortOption` enum defines how files should be sorted when listing directory contents.
+
+## Type Definition
+
+```swift
+public enum SortOption: String, ExpressibleByArgument
+```
+
+Defined in: `SwiftListCore/Configuration/SortOption.swift`
+
+This enum conforms to:
+- `String` - Raw representable with string values
+- `ExpressibleByArgument` - Can be used as a command-line argument in Swift Argument Parser
+
+## Cases
+
+<ParamField path="name" type="SortOption">
+  Sort files alphabetically by name (default).
+  
+  Uses case-insensitive lexicographic comparison. Files are sorted in ascending order (A to Z).
+</ParamField>
+
+<ParamField path="time" type="SortOption">
+  Sort files by modification time, most recent first.
+  
+  Files modified most recently appear first in the listing. Files with no modification date are treated as having the oldest possible date.
+</ParamField>
+
+<ParamField path="size" type="SortOption">
+  Sort files by size, largest first.
+  
+  Files with the largest size appear first in the listing. Files with no size information are treated as having zero size.
+</ParamField>
+
+## Usage Examples
+
+### Sort by Name (Default)
+
+```swift
+import SwiftListCore
+
+let options = DisplayOptions(
+    sortBy: .name
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+// Output: Files listed alphabetically
+```
+
+### Sort by Modification Time
+
+```swift
+import SwiftListCore
+
+// Show most recently modified files first
+let options = DisplayOptions(
+    long: true,
+    sortBy: .time
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+// Output: Files listed with newest first
+```
+
+### Sort by File Size
+
+```swift
+import SwiftListCore
+
+// Show largest files first
+let options = DisplayOptions(
+    long: true,
+    humanReadable: true,
+    sortBy: .size
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+// Output: Files listed with largest first
+```
+
+### Compare Different Sort Orders
+
+```swift
+import SwiftListCore
+
+let baseOptions = DisplayOptions(
+    long: true,
+    humanReadable: true
+)
+
+// By name
+var options = baseOptions
+options.sortBy = .name
+print("Sorted by name:")
+print(try FileManagerHelper.contents(with: options))
+
+// By time
+options.sortBy = .time
+print("\nSorted by time:")
+print(try FileManagerHelper.contents(with: options))
+
+// By size
+options.sortBy = .size
+print("\nSorted by size:")
+print(try FileManagerHelper.contents(with: options))
+```
+
+### Interactive Sort Selection
+
+```swift
+import Foundation
+import SwiftListCore
+
+func listDirectory(at path: String, sortedBy sortOption: SortOption) throws {
+    let url = URL(fileURLWithPath: path)
+    let options = DisplayOptions(
+        location: url,
+        long: true,
+        icons: true,
+        humanReadable: true,
+        sortBy: sortOption
+    )
+    
+    print("Directory: \(path)")
+    print("Sort order: \(sortOption.rawValue)")
+    print("---")
+    
+    let listing = try FileManagerHelper.contents(with: options)
+    print(listing)
+}
+
+// Use with different sort options
+try listDirectory(at: "/usr/local", sortedBy: .name)
+try listDirectory(at: "/usr/local", sortedBy: .size)
+try listDirectory(at: "/usr/local", sortedBy: .time)
+```
+
+### Find Largest Files
+
+```swift
+import Foundation
+import SwiftListCore
+
+func findLargestFiles(in path: String, limit: Int = 10) throws {
+    let url = URL(fileURLWithPath: path)
+    let options = DisplayOptions(
+        location: url,
+        long: true,
+        humanReadable: true,
+        sortBy: .size  // Sort by size, largest first
+    )
+    
+    let listing = try FileManagerHelper.contents(with: options)
+    let lines = listing.split(separator: "\n")
+    
+    print("Top \(limit) largest files in \(path):")
+    for (index, line) in lines.prefix(limit).enumerated() {
+        print("\(index + 1). \(line)")
+    }
+}
+
+try findLargestFiles(in: "/var/log")
+```
+
+### Find Recently Modified Files
+
+```swift
+import Foundation
+import SwiftListCore
+
+func findRecentFiles(in path: String, limit: Int = 5) throws {
+    let url = URL(fileURLWithPath: path)
+    let options = DisplayOptions(
+        location: url,
+        long: true,
+        sortBy: .time  // Sort by modification time, newest first
+    )
+    
+    let listing = try FileManagerHelper.contents(with: options)
+    let lines = listing.split(separator: "\n")
+    
+    print("Most recently modified files in \(path):")
+    for (index, line) in lines.prefix(limit).enumerated() {
+        print("\(index + 1). \(line)")
+    }
+}
+
+try findRecentFiles(in: FileManager.default.currentDirectoryPath)
+```
+
+### Recursive Listing with Custom Sort
+
+```swift
+import SwiftListCore
+
+// Recursively list, sorted by size at each level
+let options = DisplayOptions(
+    recurse: true,
+    depthLimit: 2,
+    long: true,
+    humanReadable: true,
+    icons: true,
+    sortBy: .size
+)
+
+let listing = try FileManagerHelper.contents(with: options)
+print(listing)
+// Each directory level will show largest files first
+```
+
+## Raw Values
+
+Since `SortOption` conforms to `String`, you can access raw string values:
+
+```swift
+print(SortOption.name.rawValue)  // "name"
+print(SortOption.time.rawValue)  // "time"
+print(SortOption.size.rawValue)  // "size"
+
+// Initialize from string
+if let option = SortOption(rawValue: "time") {
+    print("Sort by \(option)")  // "Sort by time"
+}
+```
+
+## Using with Swift Argument Parser
+
+Since `SortOption` conforms to `ExpressibleByArgument`, it can be used directly in command-line argument parsing:
+
+```swift
+import ArgumentParser
+import SwiftListCore
+
+struct ListCommand: ParsableCommand {
+    @Option(name: .shortAndLong, help: "Sort order")
+    var sort: SortOption = .name
+    
+    func run() throws {
+        let options = DisplayOptions(
+            long: true,
+            sortBy: sort
+        )
+        
+        let listing = try FileManagerHelper.contents(with: options)
+        print(listing)
+    }
+}
+
+// Command line usage:
+// ./myapp --sort name
+// ./myapp -s time
+// ./myapp --sort size
+```
+
+## Sorting Behavior Details
+
+### Name Sorting
+- Uses `localizedCompare()` for natural alphabetical ordering
+- Case-insensitive
+- Numbers sorted naturally (e.g., "file2" comes before "file10")
+- Ascending order (A to Z)
+
+### Time Sorting  
+- Based on file modification date (`contentModificationDate`)
+- Most recent files first (descending order)
+- Files without modification date treated as oldest
+
+### Size Sorting
+- Based on file size in bytes
+- Largest files first (descending order)
+- Files without size information treated as 0 bytes
+- Directories may show as 0 or small sizes (metadata only)
+
+## Related
+
+- [DisplayOptions](/api/display-options) - Use SortOption with the sortBy property
+- [FileManagerHelper](/api/file-manager-helper) - Applies sorting when listing contents
+- [Library API Overview](/api/overview) - Getting started with the library
